@@ -4,23 +4,27 @@ import { slugify } from "./format";
 // Quản trị nhập mỗi dòng một mục: "Tên | giá | đơn vị" (món) và "Tên | giá | sức chứa" (hộp).
 // Tên hộp có chữ "lục giác" dùng ảnh hộp lục giác, còn lại dùng ảnh hộp chữ nhật.
 
-/** Ảnh thật tách nền trong `public/trai/`: [tên file, bề rộng so với khung giỏ, tỉ lệ rộng/cao]. */
+/**
+ * Ảnh thật tách nền trong `public/trai/`: [tên file, bề rộng so với khung hộp, tỉ lệ rộng/cao].
+ * Bề rộng tính từ kích thước thật: bề ngang món (cm) chia cho 48 (hộp quà coi như rộng 48cm trên khung),
+ * ví dụ táo 8cm, dưa lưới 15cm, chùm cherry 6cm. Thêm món mới thì giữ đúng cách tính này để các món đúng tỉ lệ với nhau.
+ */
 const PHOTOS = {
-  apple: ["tao", 0.21, 301 / 304],
-  orange: ["cam", 0.21, 318 / 274],
-  pear: ["le", 0.17, 226 / 313],
-  kiwi: ["kiwi", 0.15, 241 / 269],
-  mango: ["xoai", 0.22, 282 / 294],
-  melon: ["dua-luoi", 0.27, 277 / 326],
-  melonYellow: ["dua-vang", 0.22, 236 / 309],
-  grapeGreen: ["nho-xanh", 0.27, 345 / 341],
-  grapeRed: ["nho-do", 0.25, 294 / 324],
-  grapeBlack: ["nho-den", 0.26, 319 / 303],
-  cherry: ["cherry", 0.19, 282 / 325],
-  strawberry: ["dau-tay", 0.22, 351 / 307],
-  blueberry: ["viet-quat", 0.2, 308 / 259],
-  dragon: ["thanh-long", 0.23, 296 / 372],
-  pineapple: ["thom", 0.17, 187 / 390],
+  apple: ["tao", 0.167, 301 / 304],
+  orange: ["cam", 0.167, 318 / 274],
+  pear: ["le", 0.146, 226 / 313],
+  kiwi: ["kiwi", 0.115, 241 / 269],
+  mango: ["xoai", 0.208, 282 / 294],
+  melon: ["dua-luoi", 0.312, 277 / 326],
+  melonYellow: ["dua-vang", 0.25, 236 / 309],
+  grapeGreen: ["nho-xanh", 0.312, 345 / 341],
+  grapeRed: ["nho-do", 0.271, 294 / 324],
+  grapeBlack: ["nho-den", 0.271, 319 / 303],
+  cherry: ["cherry", 0.125, 282 / 325],
+  strawberry: ["dau-tay", 0.177, 351 / 307],
+  blueberry: ["viet-quat", 0.125, 308 / 259],
+  dragon: ["thanh-long", 0.208, 296 / 372],
+  pineapple: ["thom", 0.229, 187 / 390],
 } as const;
 
 type Kind = keyof typeof PHOTOS;
