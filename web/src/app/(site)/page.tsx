@@ -10,10 +10,16 @@ import { mapEmbed, mapLink } from "@/lib/format";
 
 // Các lát trái cây bay trong ô mức giá: mỗi lát một làn, tốc độ và chiều khác nhau cho tự nhiên.
 const FLYERS = [
-  { src: "/fruit/cam.webp", size: 46, top: "8%", fly: "3.4s", spin: "7s", dir: "alternate" },
-  { src: "/fruit/kiwi.webp", size: 58, top: "38%", fly: "4.6s", spin: "9s", dir: "alternate-reverse" },
-  { src: "/fruit/cam.webp", size: 34, top: "66%", fly: "2.9s", spin: "6s", dir: "alternate-reverse" },
-  { src: "/fruit/kiwi.webp", size: 40, top: "72%", fly: "3.9s", spin: "8s", dir: "alternate" },
+  { src: "/fruit/cam.webp", w: 46, h: 46, top: "4%", fly: "3.4s", spin: "7s", dir: "alternate", delay: "0s" },
+  { src: "/fruit/dau.webp", w: 34, h: 42, top: "16%", fly: "4.2s", spin: "10s", dir: "alternate-reverse", delay: "-1.3s" },
+  { src: "/fruit/viet-quat.webp", w: 24, h: 24, top: "30%", fly: "2.6s", spin: "5s", dir: "alternate", delay: "-0.8s" },
+  { src: "/fruit/kiwi.webp", w: 56, h: 56, top: "36%", fly: "4.8s", spin: "9s", dir: "alternate-reverse", delay: "-2.1s" },
+  { src: "/fruit/cam.webp", w: 30, h: 30, top: "50%", fly: "3.1s", spin: "6s", dir: "alternate", delay: "-1.7s" },
+  { src: "/fruit/viet-quat.webp", w: 30, h: 30, top: "58%", fly: "3.7s", spin: "7s", dir: "alternate-reverse", delay: "-0.4s" },
+  { src: "/fruit/dau.webp", w: 42, h: 52, top: "62%", fly: "5.2s", spin: "12s", dir: "alternate", delay: "-3s" },
+  { src: "/fruit/kiwi.webp", w: 38, h: 38, top: "74%", fly: "3.9s", spin: "8s", dir: "alternate-reverse", delay: "-2.6s" },
+  { src: "/fruit/cam.webp", w: 36, h: 36, top: "80%", fly: "4.4s", spin: "9s", dir: "alternate", delay: "-3.5s" },
+  { src: "/fruit/viet-quat.webp", w: 20, h: 20, top: "88%", fly: "2.9s", spin: "5s", dir: "alternate", delay: "-1.1s" },
 ] as const;
 
 export default async function HomePage() {
@@ -195,8 +201,8 @@ export default async function HomePage() {
                 >
                   {/* Rê chuột vào: mấy lát trái cây bay qua lại phía sau chữ. */}
                   {FLYERS.map((f, n) => (
-                    <span key={n} aria-hidden className="fly-lane" style={{ top: f.top, animationDuration: f.fly, animationDirection: f.dir }}>
-                      <Image src={f.src} alt="" width={f.size} height={f.size} style={{ animationDuration: f.spin }} />
+                    <span key={n} aria-hidden className="fly-lane" style={{ top: f.top, animationDuration: f.fly, animationDirection: f.dir, animationDelay: f.delay }}>
+                      <Image src={f.src} alt="" width={f.w} height={f.h} style={{ animationDuration: f.spin }} />
                     </span>
                   ))}
                   <p className="relative min-h-[2.5em] font-display text-[1.3rem] font-bold leading-[1.25] text-balance">{tier.label}</p>
