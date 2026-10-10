@@ -92,9 +92,9 @@ export default async function HomePage() {
             return (
               <li key={g.id}>
                 <Link href={`/san-pham?dm=${g.slug}`} className="group flex flex-col items-center text-center">
-                  <span className="relative block size-28 overflow-hidden rounded-full bg-sage ring-1 ring-line transition-shadow duration-300 group-hover:ring-4 group-hover:ring-forest-600/30">
+                  <span className="relative block size-32 overflow-hidden rounded-full bg-sage ring-1 ring-line transition-shadow duration-300 group-hover:ring-4 group-hover:ring-forest-600/30">
                     {cover ? (
-                      <Image src={cover} alt="" fill sizes="112px" className="object-cover object-bottom" />
+                      <Image src={cover} alt="" fill sizes="128px" className={`object-cover ${g.image ? "" : "object-bottom"}`} />
                     ) : (
                       <span className="flex size-full items-center justify-center text-forest-600">
                         <LeafIcon width={38} height={38} />

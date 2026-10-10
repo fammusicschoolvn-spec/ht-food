@@ -33,7 +33,7 @@ function uniqueSlug(base: string, taken: string[]): string {
 const lines = (fd: FormData, key: string) =>
   [...new Set(text(fd, key, 2000).split(/\r?\n/).map((l) => l.trim().slice(0, 40)).filter(Boolean))].slice(0, 30);
 
-const IMAGE_URL = /^\/(products|media|hero)\/[a-z0-9-]+\.webp$/;
+const IMAGE_URL = /^\/(products|media|hero|categories)\/[a-z0-9-]+\.webp$/;
 
 function parseImages(fd: FormData): string[] {
   try {

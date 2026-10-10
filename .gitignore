@@ -4,3 +4,6 @@
 
 # Cấu hình riêng của máy
 /.claude/
+
+# Ảnh gốc danh mục (bản đã xử lý nằm ở web/public/categories)
+/ảnh công cụ/

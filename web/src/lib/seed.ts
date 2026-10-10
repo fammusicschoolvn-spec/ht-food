@@ -9,17 +9,17 @@ type Group = [name: string, children: string[], image?: string];
 // Nhóm lớn và danh mục con theo danh sách của cửa hàng.
 const groups: Group[] = [
   ["Giỏ & hộp quà", ["Giỏ quà trái cây", "Hộp quà trái cây"]],
-  ["Đồ uống", ["Nước ngọt", "Nước tăng lực", "Nước ion kiềm", "Nước sâm", "Sữa trái cây", "Sữa hạt"]],
-  ["Bia & Rượu", ["Bia", "Rượu"]],
-  ["Sâm & Yến", ["Yến", "Cao sâm"]],
-  ["Bánh", ["Bánh quy", "Bánh bông lan", "Bánh quế", "Bánh gấu", "Bánh Thái"]],
-  ["Kẹo & Socola", ["Socola", "Kẹo dẻo", "Kẹo sữa", "Kẹo mút", "Kẹo ngậm"]],
-  ["Snack & Đồ ăn vặt", ["Snack", "Cơm cháy", "Rong biển ăn liền", "Khô bò", "Sữa chua sấy"]],
-  ["Trái cây", ["Trái cây tươi", "Trái cây sấy"], "/hero/cam.webp"],
-  ["Thạch & Rau câu", ["Thạch tổng hợp", "Rau câu trái cây"]],
-  ["Ngũ cốc", ["Ngũ cốc ăn kiêng", "Ngũ cốc tăng cân"]],
-  ["Thực phẩm khô & Đồ hộp", ["Mì ăn liền", "Thịt hộp", "Gia vị", "Phô mai"]],
-  ["Hóa phẩm gia dụng", ["Viên giặt quần áo"]],
+  ["Đồ uống", ["Nước ngọt", "Nước tăng lực", "Nước ion kiềm", "Nước sâm", "Sữa trái cây", "Sữa hạt"], "/categories/do-uong.webp"],
+  ["Bia & Rượu", ["Bia", "Rượu"], "/categories/bia-ruou.webp"],
+  ["Sâm & Yến", ["Yến", "Cao sâm"], "/categories/sam-yen.webp"],
+  ["Bánh", ["Bánh quy", "Bánh bông lan", "Bánh quế", "Bánh gấu", "Bánh Thái"], "/categories/banh.webp"],
+  ["Kẹo & Socola", ["Socola", "Kẹo dẻo", "Kẹo sữa", "Kẹo mút", "Kẹo ngậm"], "/categories/keo-socola.webp"],
+  ["Snack & Đồ ăn vặt", ["Snack", "Cơm cháy", "Rong biển ăn liền", "Khô bò", "Sữa chua sấy"], "/categories/snack-do-an-vat.webp"],
+  ["Trái cây", ["Trái cây tươi", "Trái cây sấy"], "/categories/trai-cay.webp"],
+  ["Thạch & Rau câu", ["Thạch tổng hợp", "Rau câu trái cây"], "/categories/thach-rau-cau.webp"],
+  ["Ngũ cốc", ["Ngũ cốc ăn kiêng", "Ngũ cốc tăng cân"], "/categories/ngu-coc.webp"],
+  ["Thực phẩm khô & Đồ hộp", ["Mì ăn liền", "Thịt hộp", "Gia vị", "Phô mai"], "/categories/thuc-pham-kho-do-hop.webp"],
+  ["Hóa phẩm gia dụng", ["Viên giặt quần áo"], "/categories/hoa-pham-gia-dung.webp"],
 ];
 
 const descriptions: Record<string, string> = {
