@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+/* Màu lấy từ bộ ảnh sản phẩm: xanh của logo, xanh đậm và viền vàng của nhãn giá. */
+@theme {
+  --color-forest-950: #04190a;
+  --color-forest-900: #072f0f;
+  --color-forest-800: #0b3d17;
+  --color-forest-700: #11481c;
+  --color-forest-600: #116426;
+  --color-forest-500: #2a7d41;
+  --color-sage: #dfe8d8;
+  --color-cream: #fbf8ef;
+  --color-ivory: #f3ecd9;
+  --color-gold: #c5a253;
+  --color-gold-soft: #ede6b6;
+  --color-gold-deep: #7d6220;
+  --color-ink: #142016;
+  --color-muted: #56634f;
+  --color-line: #e2dcc8;
+  --color-danger: #a3271f;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@theme inline {
+  --font-display: var(--font-heading), system-ui, sans-serif;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--color-forest-700);
+  color: var(--color-gold-soft);
+}
+
+@layer base {
+  /* Chữ tiêu đề mặc định đậm vừa; lớp font-medium, font-bold… vẫn ghi đè được. */
+  .font-display {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Chấm bi trang trí ở phần mở đầu */
+.dots {
+  background-image: radial-gradient(var(--color-gold) 1.6px, transparent 1.8px);
+  background-size: 14px 14px;
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-[1240px] px-5 sm:px-8;
+  }
+
+  .eyebrow {
+    @apply text-[0.72rem] font-semibold uppercase tracking-[0.22em];
+  }
+
+  .display {
+    @apply font-display font-extrabold tracking-[-0.025em];
+  }
+
+  .btn {
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-6 text-[0.95rem] font-semibold transition-colors duration-200;
+  }
+  .btn-gold {
+    @apply bg-gold text-forest-950 hover:bg-gold-soft;
+  }
+  .btn-forest {
+    @apply bg-forest-800 text-cream hover:bg-forest-700;
+  }
+  .btn-line {
+    @apply border border-forest-800/25 text-forest-800 hover:border-forest-800 hover:bg-forest-800 hover:text-cream;
+  }
+  .btn-line-light {
+    @apply border border-cream/35 text-cream hover:border-gold-soft hover:text-gold-soft;
+  }
+
+  .chip {
+    @apply inline-flex min-h-11 items-center rounded-full border border-line bg-white/60 px-4 text-sm font-medium text-ink transition-colors duration-200 hover:border-forest-700;
+  }
+  .chip-on {
+    @apply border-forest-800 bg-forest-800 text-cream hover:border-forest-800;
+  }
+
+  /* Trang quản trị */
+  .a-label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+  .a-help {
+    @apply mt-1.5 text-[0.82rem] leading-relaxed text-muted;
+  }
+  .a-input {
+    @apply block min-h-11 w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[0.95rem] text-ink placeholder:text-muted/60 focus:border-forest-600;
+  }
+  .a-card {
+    @apply rounded-2xl border border-line bg-white p-5 sm:p-7;
+  }
+  .a-btn {
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .a-btn-primary {
+    @apply bg-forest-800 text-white hover:bg-forest-700;
+  }
+  .a-btn-ghost {
+    @apply border border-line bg-white text-ink hover:border-forest-700;
+  }
+  .a-btn-danger {
+    @apply border border-danger/30 bg-white text-danger hover:bg-danger hover:text-white;
+  }
+}
+
+/* Hiện dần khi vào trang: chỉ một nhịp nhẹ, tắt hẳn nếu máy bật giảm chuyển động. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.rise {
+  animation: rise 0.9s var(--ease-out-soft) both;
+}
+.rise-2 {
+  animation-delay: 0.12s;
+}
+.rise-3 {
+  animation-delay: 0.24s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

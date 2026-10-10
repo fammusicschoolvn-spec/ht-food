@@ -1,0 +1,6 @@
+# Ảnh gốc cửa hàng gửi (110MB, vượt giới hạn 100MB của GitHub)
+*.zip
+/_nguon/
+
+# Cấu hình riêng của máy
+/.claude/
