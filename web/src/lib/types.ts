@@ -53,7 +53,8 @@ export type Content = {
   steps: Step[];
   candy: { title: string; body: string };
   productNote: string;
-  box: { title: string; intro: string; styles: string[]; items: string[] };
+  /** Trang tự xếp giỏ quà. `baskets`: "Tên | giá | sức chứa"; `fruits`: "Tên | giá | đơn vị". */
+  box: { title: string; intro: string; priceNote: string; baskets: string[]; fruits: string[] };
 };
 
 export type Db = {

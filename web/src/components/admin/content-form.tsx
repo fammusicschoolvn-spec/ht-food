@@ -89,13 +89,24 @@ export function ContentForm({ content }: { content: Content }) {
       </fieldset>
 
       <fieldset className="a-card space-y-5">
-        <legend className="float-left mb-5 w-full font-display text-[1.5rem]">Trang “Tự chọn hộp quà”</legend>
+        <legend className="float-left mb-5 w-full font-display text-[1.5rem]">Trang “Tự xếp giỏ quà”</legend>
         <Field name="boxTitle" label="Tiêu đề" value={box.title} />
         <Field name="boxIntro" label="Lời dẫn" value={box.intro} rows={2} />
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field name="boxStyles" label="Các kiểu hộp, giỏ" value={box.styles.join("\n")} rows={8} help="Mỗi dòng một kiểu." />
-          <Field name="boxItems" label="Các loại khách được chọn" value={box.items.join("\n")} rows={8} help="Mỗi dòng một loại trái cây, bánh kẹo đang có." />
-        </div>
+        <Field
+          name="boxBaskets"
+          label="Các kiểu giỏ"
+          value={box.baskets.join("\n")}
+          rows={4}
+          help="Mỗi dòng một kiểu, theo mẫu: Tên | giá | số món tối đa. Ví dụ: Giỏ mây nhỏ | 80000 | 8"
+        />
+        <Field
+          name="boxFruits"
+          label="Trái cây, bánh kẹo khách được chọn"
+          value={box.fruits.join("\n")}
+          rows={12}
+          help="Mỗi dòng một loại, theo mẫu: Tên | giá | đơn vị. Ví dụ: Táo | 35000 | trái. Hình vẽ tự chọn theo tên (táo, cam, lê, kiwi, xoài, dưa, nho, cherry, dâu, việt quất); tên khác hiện hình hộp quà."
+        />
+        <Field name="boxPriceNote" label="Ghi chú về giá" value={box.priceNote} rows={2} help="Hiện ngay dưới tổng tiền. Khi đã nhập giá thật thì sửa hoặc xóa dòng này." />
       </fieldset>
 
       <fieldset className="a-card space-y-5">

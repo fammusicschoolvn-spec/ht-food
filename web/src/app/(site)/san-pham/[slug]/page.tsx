@@ -103,7 +103,7 @@ async function Detail({ params }: Pick<Props, "params">) {
               className="mt-5 inline-flex min-h-11 items-center gap-2 font-semibold text-forest-600 underline decoration-line underline-offset-4 hover:decoration-forest-600"
             >
               <BoxIcon width={18} height={18} />
-              Tự chọn hộp quà theo mẫu này
+              Tự xếp giỏ quà theo mẫu này
             </Link>
 
             <p className="mt-9 flex gap-3 border-t border-line pt-7 text-[0.95rem] text-muted">

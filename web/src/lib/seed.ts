@@ -143,11 +143,30 @@ export const defaultContent: Content = {
     body: "Sản phẩm của danh mục này đang được cập nhật lên website. Nhắn Zalo để HT Food gửi hình các loại đang có tại cửa hàng.",
   },
   box: {
-    title: "Tự chọn hộp quà theo ý bạn.",
-    intro:
-      "Chọn kiểu hộp, mức ngân sách và những loại bạn muốn có. HT Food sẽ báo lại loại đang có và giá cụ thể qua Zalo.",
-    styles: ["Hộp chữ nhật", "Hộp vuông", "Hộp tròn", "Hộp trái tim", "Khay giấy", "Giỏ bọc lưới", "Giỏ kèm hoa"],
-    items: ["Nho xanh", "Nho đen", "Táo", "Cam", "Lê", "Kiwi", "Dưa lưới", "Dưa vàng", "Cherry", "Việt quất", "Dâu tây", "Xoài", "Bánh kẹo nhập khẩu"],
+    title: "Tự tay xếp giỏ quà của bạn.",
+    intro: "Chọn kiểu giỏ, kéo trái cây thả vào giỏ và xem tổng tiền ngay. Cần nhiều giỏ giống nhau cho công ty, chỉ việc nhập số giỏ.",
+    priceNote: "Giá trên trang này đang là giá minh họa. HT Food sẽ xác nhận giá chính thức khi bạn gửi đơn.",
+    // Giá dưới đây là giá minh họa để chạy thử tính năng; chủ cửa hàng sửa trong trang quản trị.
+    baskets: [
+      "Giỏ mây nhỏ | 80000 | 8",
+      "Giỏ mây vừa | 120000 | 12",
+      "Giỏ mây lớn | 160000 | 16",
+    ],
+    fruits: [
+      "Táo | 35000 | trái",
+      "Cam | 30000 | trái",
+      "Lê | 45000 | trái",
+      "Kiwi | 20000 | trái",
+      "Xoài | 60000 | trái",
+      "Dưa lưới | 180000 | trái",
+      "Dưa vàng | 150000 | trái",
+      "Nho xanh | 150000 | chùm",
+      "Nho đen | 120000 | chùm",
+      "Cherry | 120000 | phần",
+      "Dâu tây | 90000 | phần",
+      "Việt quất | 80000 | hộp",
+      "Bánh kẹo nhập khẩu | 100000 | hộp",
+    ],
   },
   productNote:
     "Trái cây trong giỏ, hộp có thể thay đổi theo mùa và theo hàng về. Nhắn HT Food để chọn loại trái cây theo ý bạn.",

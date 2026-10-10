@@ -31,7 +31,7 @@ function uniqueSlug(base: string, taken: string[]): string {
 }
 
 const lines = (fd: FormData, key: string) =>
-  [...new Set(text(fd, key, 2000).split(/\r?\n/).map((l) => l.trim().slice(0, 40)).filter(Boolean))].slice(0, 30);
+  [...new Set(text(fd, key, 2000).split(/\r?\n/).map((l) => l.trim().slice(0, 80)).filter(Boolean))].slice(0, 30);
 
 const IMAGE_URL = /^\/(products|media|hero|categories)\/[a-z0-9-]+\.webp$/;
 
@@ -252,8 +252,9 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
       box: {
         title: text(fd, "boxTitle", 120) || old.box.title,
         intro: text(fd, "boxIntro", 400),
-        styles: lines(fd, "boxStyles").length ? lines(fd, "boxStyles") : old.box.styles,
-        items: lines(fd, "boxItems").length ? lines(fd, "boxItems") : old.box.items,
+        priceNote: text(fd, "boxPriceNote", 300),
+        baskets: lines(fd, "boxBaskets").length ? lines(fd, "boxBaskets") : old.box.baskets,
+        fruits: lines(fd, "boxFruits").length ? lines(fd, "boxFruits") : old.box.fruits,
       },
     };
     await removeUploads([old.hero.image, old.hero.imageSmall], db);

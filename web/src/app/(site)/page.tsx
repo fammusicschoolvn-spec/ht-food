@@ -69,7 +69,7 @@ export default async function HomePage() {
             </Link>
             <Link href="/tu-chon-hop-qua" className="btn btn-gold px-7 uppercase tracking-[0.06em]">
               <BoxIcon />
-              Tự chọn hộp quà
+              Tự xếp giỏ quà
             </Link>
           </div>
         </div>
@@ -82,7 +82,7 @@ export default async function HomePage() {
             { icon: <PinIcon width={22} height={22} />, top: "Cửa hàng", text: shop.address },
             { icon: <PhoneIcon width={22} height={22} />, top: "Điện thoại / Zalo", text: shop.phone },
             { icon: <LeafIcon width={22} height={22} />, top: "Danh mục", text: `${groups.length} nhóm sản phẩm` },
-            { icon: <BoxIcon width={22} height={22} />, top: "Theo ý bạn", text: "Tự chọn hộp quà" },
+            { icon: <BoxIcon width={22} height={22} />, top: "Theo ý bạn", text: "Tự xếp giỏ quà" },
           ].map((item) => (
             <li key={item.top} className="grid grid-cols-[3rem_1fr] items-center gap-4">
               <span className="inline-flex size-12 items-center justify-center rounded-full border border-cream/50">{item.icon}</span>
@@ -159,13 +159,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Tự chọn hộp quà */}
+      {/* Tự xếp giỏ quà */}
       <section className="container-x pt-20 lg:pt-28">
         <div className="grid overflow-hidden rounded-[30px] bg-forest-900 text-cream lg:grid-cols-[1.25fr_0.75fr]">
           <div className="p-8 sm:p-12 lg:p-16">
             <p className="eyebrow flex items-center gap-3 text-gold">
               <BoxIcon width={18} height={18} />
-              Tự chọn hộp quà
+              Tự xếp giỏ quà
             </p>
             <h2 className="display mt-4 text-[clamp(2rem,4vw,3.1rem)] leading-[1.1] text-balance">{content.box.title}</h2>
             <p className="mt-5 max-w-[32rem] leading-[1.75] text-cream/80">{content.box.intro}</p>
@@ -174,7 +174,7 @@ export default async function HomePage() {
               <ArrowIcon width={18} height={18} />
             </Link>
             <ul className="mt-10 flex flex-wrap gap-2.5" aria-label="Một số loại có thể chọn">
-            {content.box.items.slice(0, 12).map((item) => (
+            {content.box.fruits.slice(0, 12).map((line) => line.split("|")[0].trim()).map((item) => (
               <li key={item} className="inline-flex min-h-11 items-center rounded-full border border-cream/20 px-5 text-[0.95rem] text-cream/90">
                 {item}
               </li>

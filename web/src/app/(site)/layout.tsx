@@ -19,7 +19,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
   const groups = topLevel(categories).map((g) => ({ ...link(g), children: childrenOf(categories, g.id).map(link) }));
   const left = [{ href: "/san-pham", label: "Tất cả sản phẩm" }, ...groups.slice(0, 1)];
   const right = [
-    { href: "/tu-chon-hop-qua", label: "Tự chọn hộp quà" },
+    { href: "/tu-chon-hop-qua", label: "Tự xếp giỏ quà" },
     { href: "/lien-he", label: "Liên hệ" },
   ];
 

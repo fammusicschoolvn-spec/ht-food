@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useBox } from "@/lib/box-store";
+import { boxCount as countBox, useBox } from "@/lib/box-store";
 import { BoxIcon, ChatIcon, ClockIcon, CloseIcon, MenuIcon, PhoneIcon, PinIcon, SearchIcon } from "./icons";
 
 type NavItem = { href: string; label: string };
@@ -41,7 +41,7 @@ export function SiteHeader({
   const [panel, setPanel] = useState<Panel>("");
   const toggle = (p: Panel) => setPanel((cur) => (cur === p ? "" : p));
   const close = () => setPanel("");
-  const boxCount = useBox().items.length;
+  const boxCount = countBox(useBox());
 
   // Rê chuột ra khỏi đầu trang thì thu bảng danh mục lại; chờ một nhịp ngắn để lỡ tay trượt ra rồi quay vào không bị đóng.
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -157,8 +157,8 @@ export function SiteHeader({
                 href={BOX_PATH}
                 className={toolButton}
                 onClick={close}
-                aria-label={boxCount ? `Tự chọn hộp quà: đã chọn ${boxCount} loại` : "Tự chọn hộp quà"}
-                title="Tự chọn hộp quà"
+                aria-label={boxCount ? `Tự xếp giỏ quà: đang có ${boxCount} món` : "Tự xếp giỏ quà"}
+                title="Tự xếp giỏ quà"
               >
                 <BoxIcon />
                 {boxCount > 0 && (

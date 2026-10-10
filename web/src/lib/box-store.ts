@@ -2,20 +2,22 @@
 
 import { useSyncExternalStore } from "react";
 
-// Lựa chọn "Tự chọn hộp quà" của khách, giữ trong trình duyệt để quay lại vẫn còn.
+// Giỏ quà khách đang tự xếp, giữ trong trình duyệt để quay lại vẫn còn.
 
 export type BoxDraft = {
-  style: string;
-  budget: string;
-  items: string[];
-  occasion: string;
+  /** Mã kiểu giỏ đang chọn; rỗng = kiểu đầu tiên. */
+  basket: string;
+  /** Mã trái cây → số lượng trong MỘT giỏ. */
+  counts: Record<string, number>;
+  /** Số giỏ giống nhau cần đặt. */
+  qty: number;
   date: string;
   note: string;
 };
 
-export const EMPTY_BOX: BoxDraft = { style: "", budget: "", items: [], occasion: "", date: "", note: "" };
+export const EMPTY_BOX: BoxDraft = { basket: "", counts: {}, qty: 1, date: "", note: "" };
 
-const KEY = "ht-food-box";
+const KEY = "ht-food-gio";
 const EVENT = "ht-food-box-change";
 
 let cacheRaw: string | null = null;
@@ -31,8 +33,19 @@ function read(): BoxDraft {
   if (raw === cacheRaw) return cacheValue;
   cacheRaw = raw;
   try {
-    const parsed = raw ? (JSON.parse(raw) as Partial<BoxDraft>) : {};
-    cacheValue = { ...EMPTY_BOX, ...parsed, items: Array.isArray(parsed.items) ? parsed.items : [] };
+    const p = raw ? (JSON.parse(raw) as Partial<BoxDraft>) : {};
+    const counts: Record<string, number> = {};
+    for (const [id, n] of Object.entries(p.counts ?? {})) {
+      if (typeof n === "number" && n > 0) counts[id] = Math.min(24, Math.floor(n));
+    }
+    cacheValue = {
+      ...EMPTY_BOX,
+      basket: typeof p.basket === "string" ? p.basket : "",
+      counts,
+      qty: Math.min(999, Math.max(1, Math.floor(Number(p.qty) || 1))),
+      date: typeof p.date === "string" ? p.date : "",
+      note: typeof p.note === "string" ? p.note : "",
+    };
   } catch {
     cacheValue = EMPTY_BOX;
   }
@@ -62,3 +75,6 @@ export function setBox(next: BoxDraft): void {
 export function useBox(): BoxDraft {
   return useSyncExternalStore(subscribe, read, () => EMPTY_BOX);
 }
+
+/** Tổng số món trong một giỏ. */
+export const boxCount = (box: BoxDraft) => Object.values(box.counts).reduce((a, b) => a + b, 0);

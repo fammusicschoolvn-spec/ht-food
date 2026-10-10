@@ -163,6 +163,23 @@ body {
   animation-play-state: running;
 }
 
+/* Giỏ quà tự xếp: trái mới rơi vào giỏ, các trái còn lại trượt về chỗ mới */
+@keyframes basket-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-90px) scale(0.6);
+  }
+  70% {
+    transform: translateY(5px) scale(1.04);
+  }
+}
+.basket-pop {
+  animation: basket-drop 0.5s var(--ease-out-soft) both;
+}
+.basket-move {
+  transition: transform 0.45s var(--ease-out-soft);
+}
+
 /* Hiện dần khi vào trang: chỉ một nhịp nhẹ, tắt hẳn nếu máy bật giảm chuyển động. */
 @keyframes rise {
   from {
@@ -184,8 +201,8 @@ body {
   html {
     scroll-behavior: auto;
   }
-  /* Riêng lát trái cây ở ô mức giá vẫn chạy: chủ cửa hàng yêu cầu, chỉ bật khi rê chuột và chuyển động chậm. */
-  *:not(.fly-lane):not(.fly-lane img),
+  /* Riêng lát trái cây ở ô mức giá và trái rơi vào giỏ vẫn chạy: chủ cửa hàng yêu cầu, chỉ xảy ra khi khách thao tác. */
+  *:not(.fly-lane):not(.fly-lane img):not(.basket-pop):not(.basket-move),
   *::before,
   *::after {
     animation: none !important;

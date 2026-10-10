@@ -25,8 +25,8 @@ function withDefaults(content: Partial<Content> | undefined): Content {
     box: {
       ...defaultContent.box,
       ...c.box,
-      styles: c.box?.styles?.length ? c.box.styles : defaultContent.box.styles,
-      items: c.box?.items?.length ? c.box.items : defaultContent.box.items,
+      baskets: c.box?.baskets?.length ? c.box.baskets : defaultContent.box.baskets,
+      fruits: c.box?.fruits?.length ? c.box.fruits : defaultContent.box.fruits,
     },
     steps: c.steps?.length ? c.steps : defaultContent.steps,
   };
