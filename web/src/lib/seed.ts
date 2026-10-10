@@ -15,7 +15,7 @@ const groups: Group[] = [
   ["Bánh", ["Bánh quy", "Bánh bông lan", "Bánh quế", "Bánh gấu", "Bánh Thái"], "/categories/banh.webp"],
   ["Kẹo & Socola", ["Socola", "Kẹo dẻo", "Kẹo sữa", "Kẹo mút", "Kẹo ngậm"], "/categories/keo-socola.webp"],
   ["Snack & Đồ ăn vặt", ["Snack", "Cơm cháy", "Rong biển ăn liền", "Khô bò", "Sữa chua sấy"], "/categories/snack-do-an-vat.webp"],
-  ["Trái cây", ["Trái cây tươi", "Trái cây sấy"], "/categories/trai-cay-2.webp"],
+  ["Trái cây", ["Trái cây tươi", "Trái cây sấy"], "/categories/trai-cay-3.webp"],
   ["Thạch & Rau câu", ["Thạch tổng hợp", "Rau câu trái cây"], "/categories/thach-rau-cau.webp"],
   ["Ngũ cốc", ["Ngũ cốc ăn kiêng", "Ngũ cốc tăng cân"], "/categories/ngu-coc.webp"],
   ["Thực phẩm khô & Đồ hộp", ["Mì ăn liền", "Thịt hộp", "Gia vị", "Phô mai"], "/categories/thuc-pham-kho-do-hop.webp"],
