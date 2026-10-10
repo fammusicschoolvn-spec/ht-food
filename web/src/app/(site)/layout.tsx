@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChatIcon, PhoneIcon } from "@/components/icons";
+import { PhoneIcon } from "@/components/icons";
+import { DealCard } from "@/components/deal-card";
 import { SiteHeader } from "@/components/site-header";
 import { childrenOf, topLevel } from "@/lib/categories";
 import { getCatalog } from "@/lib/data";
@@ -10,6 +11,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
   const { categories, content } = await getCatalog();
   const { shop } = content;
   const zalo = safeUrl(shop.zalo);
+  const zaloGroup = safeUrl(shop.zaloGroup);
   const facebook = safeUrl(shop.facebook);
   const messenger = safeUrl(shop.messenger);
 
@@ -40,7 +42,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
 
-      <footer className="bg-forest-950 pb-24 text-cream/80 sm:pb-0">
+      <footer className="bg-forest-950 text-cream/80">
         <div className="container-x grid gap-12 py-16 md:grid-cols-[0.8fr_1.4fr_1fr]">
           <div>
             <Image src="/brand/logo-cream.png" alt="HT Food" width={900} height={734} className="h-28 w-auto" />
@@ -93,22 +95,30 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
         </div>
       </footer>
 
-      {/* Thanh liên hệ nhanh trên điện thoại */}
-      <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 gap-px border-t border-gold/30 bg-gold/30 pb-[env(safe-area-inset-bottom)] sm:hidden">
-        <a href={telHref(shop.phone)} className="flex min-h-14 items-center justify-center gap-2 bg-forest-900 font-semibold text-cream">
-          <PhoneIcon />
-          Gọi cửa hàng
-        </a>
-        {zalo ? (
-          <a href={zalo} target="_blank" rel="noopener noreferrer" className="flex min-h-14 items-center justify-center gap-2 bg-gold font-semibold text-forest-950">
-            <ChatIcon />
-            Nhắn Zalo
+      {zaloGroup && <DealCard href={zaloGroup} />}
+
+      {/* Hai nút liên hệ tròn, neo ở mép phải và đi theo khi cuộn trang */}
+      <div className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-4 z-30 flex flex-col gap-3 sm:right-6">
+        {zalo && (
+          <a
+            href={zalo}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Nhắn Zalo cho HT Food"
+            title="Nhắn Zalo"
+            className="flex size-12 items-center justify-center rounded-full bg-[#0068ff] text-[0.8rem] font-extrabold tracking-tight text-white shadow-[0_10px_24px_-8px_rgb(0_60_160/0.65)] ring-2 ring-white transition-transform duration-200 hover:scale-110"
+          >
+            Zalo
           </a>
-        ) : (
-          <Link href="/lien-he" className="flex min-h-14 items-center justify-center gap-2 bg-gold font-semibold text-forest-950">
-            Liên hệ
-          </Link>
         )}
+        <a
+          href={telHref(shop.phone)}
+          aria-label={`Gọi cửa hàng ${shop.phone}`}
+          title={`Gọi ${shop.phone}`}
+          className="flex size-12 items-center justify-center rounded-full bg-forest-600 text-white shadow-[0_10px_24px_-8px_rgb(7_47_15/0.7)] ring-2 ring-white transition-transform duration-200 hover:scale-110"
+        >
+          <PhoneIcon />
+        </a>
       </div>
     </>
   );

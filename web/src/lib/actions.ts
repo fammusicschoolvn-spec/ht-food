@@ -207,7 +207,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
     const raw = text(fd, key, 300);
     return { raw, url: safeUrl(raw) };
   };
-  const links = { zalo: link("zalo"), facebook: link("facebook"), messenger: link("messenger") };
+  const links = { zalo: link("zalo"), zaloGroup: link("zaloGroup"), facebook: link("facebook"), messenger: link("messenger") };
   for (const l of Object.values(links)) {
     if (l.raw && !l.url) return { error: `Đường dẫn "${l.raw}" phải bắt đầu bằng https://` };
   }
@@ -229,6 +229,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
         address,
         phone,
         zalo: links.zalo.url,
+        zaloGroup: links.zaloGroup.url,
         facebook: links.facebook.url,
         messenger: links.messenger.url,
         hours: text(fd, "hours", 120),

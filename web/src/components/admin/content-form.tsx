@@ -56,6 +56,7 @@ export function ContentForm({ content }: { content: Content }) {
         <Field name="address" label="Địa chỉ" value={shop.address} help="Bản đồ trên website tự tìm theo địa chỉ này." required />
         <Field name="hours" label="Giờ mở cửa" value={shop.hours} placeholder="Ví dụ: 7:00 – 21:00 mỗi ngày" help="Để trống thì không hiện." />
         <Field name="zalo" label="Đường dẫn Zalo" value={shop.zalo} type="url" placeholder="https://zalo.me/…" />
+        <Field name="zaloGroup" label="Đường dẫn nhóm Zalo săn deal" value={shop.zaloGroup} type="url" placeholder="https://zalo.me/g/…" help="Hiện thành thẻ mời ở góc trái màn hình, khách bấm tắt được. Để trống thì thẻ tự ẩn." />
         <Field name="facebook" label="Đường dẫn trang Facebook" value={shop.facebook} type="url" placeholder="https://www.facebook.com/…" help="Để trống thì nút Facebook tự ẩn." />
         <Field name="messenger" label="Đường dẫn Messenger" value={shop.messenger} type="url" placeholder="https://m.me/…" help="Để trống thì nút Messenger tự ẩn." />
       </fieldset>

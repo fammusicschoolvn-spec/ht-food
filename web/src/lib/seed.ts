@@ -106,6 +106,7 @@ export const defaultContent: Content = {
     address: "136 Hùng Vương, TT. Gia Ray, Xuân Lộc, Đồng Nai",
     phone: "093 794 70 27",
     zalo: "https://zalo.me/0937947027",
+    zaloGroup: "https://zalo.me/g/ovwipb622",
     facebook: "",
     messenger: "",
     hours: "",

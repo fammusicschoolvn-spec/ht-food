@@ -35,6 +35,8 @@ export type Content = {
     address: string;
     phone: string;
     zalo: string;
+    /** Link mời vào nhóm Zalo săn deal; để trống thì thẻ mời tự ẩn. */
+    zaloGroup: string;
     facebook: string;
     messenger: string;
     hours: string;
