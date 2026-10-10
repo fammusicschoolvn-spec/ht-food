@@ -3,10 +3,8 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { EMPTY_BOX, newUid, setBox, useBox, type BoxDraft, type Placed } from "@/lib/box-store";
-import { formatVnd, rimHalfWidth, type BasketOption, type FruitOption } from "@/lib/builder";
+import { formatVnd, type BasketOption, type FruitOption } from "@/lib/builder";
 import { ChatIcon, PhoneIcon } from "./icons";
-
-const RIBBONS = ["#0b3d17", "#8e1218", "#c5a253", "#3b4f94"];
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
@@ -27,62 +25,8 @@ function ItemArt({ fruit, sizes }: { fruit: FruitOption; sizes: string }) {
   );
 }
 
-/* ---------- Giỏ: phần sau nằm dưới các món, phần trước nằm đè lên ---------- */
-
-function basketPath(rw: number) {
-  const L = 200 - rw;
-  const R = 200 + rw;
-  const bw = rw * 0.8;
-  return { L, R, body: `M${L} 222Q${L + 4} 300 ${200 - bw} 338Q200 356 ${200 + bw} 338Q${R - 4} 300 ${R} 222Q200 250 ${L} 222Z` };
-}
-
-function BasketBack({ rw }: { rw: number }) {
-  const { L, R } = basketPath(rw);
-  return (
-    <svg viewBox="0 0 400 380" className="absolute inset-0 size-full" aria-hidden>
-      <ellipse cx="200" cy="350" rx={rw * 0.95} ry="14" fill="rgb(7 47 15 / 0.16)" />
-      <path d={`M${L + 14} 224C${L + 14} 6 ${R - 14} 6 ${R - 14} 224`} fill="none" stroke="#a8773a" strokeWidth="11" strokeLinecap="round" />
-      <path d={`M${L + 14} 224C${L + 14} 6 ${R - 14} 6 ${R - 14} 224`} fill="none" stroke="#f0d6a6" strokeWidth="3" strokeDasharray="7 9" strokeLinecap="round" />
-      <ellipse cx="200" cy="222" rx={rw} ry="22" fill="#6b4a26" />
-      <ellipse cx="200" cy="226" rx={rw - 10} ry="16" fill="#f4ecd6" opacity="0.9" />
-    </svg>
-  );
-}
-
-function BasketFront({ rw, ribbon }: { rw: number; ribbon: string }) {
-  const { L, R, body } = basketPath(rw);
-  return (
-    <svg viewBox="0 0 400 380" className="pointer-events-none absolute inset-0 size-full" aria-hidden>
-      <defs>
-        <linearGradient id="bk-body" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e2bd84" />
-          <stop offset="100%" stopColor="#a8773a" />
-        </linearGradient>
-        <pattern id="bk-weave" width="18" height="12" patternUnits="userSpaceOnUse">
-          <path d="M0 3h9M9 9h9" stroke="#8a5f2a" strokeWidth="2.4" strokeLinecap="round" opacity="0.55" />
-          <path d="M0 9h9M9 3h9" stroke="#f3dbb0" strokeWidth="2.4" strokeLinecap="round" opacity="0.6" />
-        </pattern>
-        <clipPath id="bk-clip">
-          <path d={body} />
-        </clipPath>
-      </defs>
-      <path d={body} fill="url(#bk-body)" />
-      <rect x={L} y="222" width={rw * 2} height="140" fill="url(#bk-weave)" clipPath="url(#bk-clip)" />
-      <path d={`M${L} 222Q200 250 ${R} 222`} fill="none" stroke="#c99b58" strokeWidth="11" strokeLinecap="round" />
-      <path d={`M${L} 222Q200 250 ${R} 222`} fill="none" stroke="#f3dbb0" strokeWidth="3" strokeDasharray="6 8" strokeLinecap="round" />
-      <g clipPath="url(#bk-clip)">
-        <path d={`M${L - 4} 268Q200 296 ${R + 4} 268V294Q200 322 ${L - 4} 294Z`} fill={ribbon} />
-        <path d={`M${L - 4} 272Q200 300 ${R + 4} 272`} fill="none" stroke="#fff" strokeWidth="1.5" opacity="0.35" />
-      </g>
-      <g transform="translate(200 296)" stroke="rgb(255 255 255 / 0.28)" strokeWidth="1.2">
-        <path d="M-4 4L-22 44-8 38-4 52 2 10ZM4 4L22 44 8 38 4 52-2 10Z" fill={ribbon} />
-        <path d="M0 0C-16-20-46-22-44 0C-46 20-16 16 0 0Z" fill={ribbon} />
-        <path d="M0 0C16-20 46-22 44 0C46 20 16 16 0 0Z" fill={ribbon} />
-        <rect x="-8" y="-8" width="16" height="16" rx="5" fill={ribbon} />
-      </g>
-    </svg>
-  );
-}
+/** Khoảng trống phía trên hộp (tính theo chiều cao ảnh hộp) để trái cao như thơm, nho nhô lên khỏi miệng hộp. */
+const HEADROOM = 0.24;
 
 /* ---------- Nút cộng trừ ---------- */
 
@@ -180,12 +124,12 @@ export function BasketBuilder({
 
   function add(id: string, at?: { x: number; y: number }) {
     if (full) {
-      setStatus(`${basket.name} đã đầy (${basket.capacity} món). Chọn giỏ lớn hơn hoặc bỏ bớt một món.`);
+      setStatus(`${basket.name} đã đầy (${basket.capacity} món). Hãy bỏ bớt một món trước khi thêm.`);
       return;
     }
     // Bấm để thêm: rải quanh giữa lòng giỏ để các món không chồng khít lên nhau.
     const n = count;
-    const spot = at ?? { x: 0.5 + (((n * 37) % 41) - 20) / 100, y: 0.4 + ((n * 53) % 15) / 100 };
+    const spot = at ?? { x: 0.5 + (((n * 37) % 37) - 18) / 100, y: 0.46 + ((n * 53) % 13) / 100 };
     const uid = newUid();
     update({ items: [...items, { uid, id, x: clamp(spot.x, 0.08, 0.92), y: clamp(spot.y, 0.08, 0.86) }] });
     setSelected(uid);
@@ -211,7 +155,7 @@ export function BasketBuilder({
 
   function chooseBasket(b: BasketOption) {
     if (count > b.capacity) {
-      setStatus(`${b.name} chỉ chứa ${b.capacity} món, giỏ của bạn đang có ${count}. Hãy bỏ bớt món trước khi đổi.`);
+      setStatus(`${b.name} chỉ chứa ${b.capacity} món, hộp của bạn đang có ${count}. Hãy bỏ bớt món trước khi đổi.`);
       return;
     }
     update({ basket: b.id });
@@ -304,11 +248,11 @@ export function BasketBuilder({
   });
 
   const message = [
-    "Chào HT Food, mình muốn đặt giỏ quà tự xếp:",
-    `- Kiểu giỏ: ${basket.name}`,
+    "Chào HT Food, mình muốn đặt hộp quà tự xếp:",
+    `- Kiểu hộp: ${basket.name}`,
     ...lines.map((l) => `- ${l.fruit.name} × ${l.n}`),
-    `- Số giỏ: ${box.qty}`,
-    `- Tạm tính: ${formatVnd(perBasket)} / giỏ, tổng ${formatVnd(total)}`,
+    `- Số hộp: ${box.qty}`,
+    `- Tạm tính: ${formatVnd(perBasket)} / hộp, tổng ${formatVnd(total)}`,
     box.date && `- Ngày nhận: ${box.date.split("-").reverse().join("/")}`,
     reference && `- Mẫu tham khảo: ${reference}`,
     box.note && `- Ghi chú: ${box.note}`,
@@ -326,7 +270,6 @@ export function BasketBuilder({
     if (openZalo && zalo) window.open(zalo, "_blank", "noopener,noreferrer");
   }
 
-  const rw = rimHalfWidth(basket.capacity);
   const dragFruit = drag && byId.get(drag.id);
   const selectedItem = items.find((i) => i.uid === selected);
   const selectedFruit = selectedItem && byId.get(selectedItem.id);
@@ -348,8 +291,16 @@ export function BasketBuilder({
             </p>
           </div>
 
-          <div ref={stageRef} className="relative mt-1 aspect-[400/380] w-full touch-none select-none" onPointerDown={(e) => e.target === e.currentTarget && setSelected("")}>
-            <BasketBack rw={rw} />
+          <div
+            ref={stageRef}
+            className="relative mt-1 w-full touch-none select-none"
+            style={{ aspectRatio: String(basket.ratio / (1 + HEADROOM)) }}
+            onPointerDown={(e) => e.target === e.currentTarget && setSelected("")}
+          >
+            {/* Ảnh hộp nằm dưới các món */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ aspectRatio: String(basket.ratio) }}>
+              <Image src={basket.image} alt="" fill priority sizes="(min-width: 640px) 590px, 92vw" className="object-contain drop-shadow-[0_18px_18px_rgb(7_47_15/0.18)]" />
+            </div>
             {items
               .map((it, z) => ({ it, z }))
               .sort((a, b) => a.it.uid.localeCompare(b.it.uid))
@@ -362,7 +313,7 @@ export function BasketBuilder({
                   key={it.uid}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${fruit.name} trong giỏ. Kéo để dời chỗ, phím mũi tên để nhích, Delete để bỏ.`}
+                  aria-label={`${fruit.name} trong hộp. Kéo để dời chỗ, phím mũi tên để nhích, Delete để bỏ.`}
                   aria-pressed={active}
                   {...placedHandlers(it)}
                   className={`basket-pop absolute cursor-grab touch-none rounded-2xl outline-offset-2 active:cursor-grabbing ${
@@ -381,12 +332,13 @@ export function BasketBuilder({
                 </div>
               );
             })}
-            <div className="absolute inset-0 z-[90] pointer-events-none">
-              <BasketFront rw={rw} ribbon={RIBBONS[basketIndex % RIBBONS.length]} />
+            {/* Thành hộp phía trước vẽ đè lên các món: cùng tấm ảnh, chỉ lấy phần thành trước */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[90]" style={{ aspectRatio: String(basket.ratio), clipPath: basket.front }}>
+              <Image src={basket.image} alt="" fill sizes="(min-width: 640px) 590px, 92vw" className="object-contain" />
             </div>
             {count === 0 && (
               <p className="pointer-events-none absolute inset-x-6 top-[30%] z-[95] text-center text-[0.98rem] font-medium text-forest-800/80">
-                Kéo trái cây thả vào giỏ, hoặc bấm vào trái cây để thêm.
+                Kéo trái cây thả vào hộp, hoặc bấm vào trái cây để thêm.
               </p>
             )}
           </div>
@@ -403,12 +355,12 @@ export function BasketBuilder({
                   Đưa ra sau
                 </button>
                 <button type="button" className="a-btn a-btn-danger min-h-11 px-3 text-[0.85rem]" onClick={() => removeUid(selectedItem.uid)}>
-                  Bỏ khỏi giỏ
+                  Bỏ khỏi hộp
                 </button>
               </>
             ) : (
               <p className="text-center text-[0.88rem] text-muted">
-                {count > 0 ? "Kéo từng món để dời chỗ. Bấm vào một món để đưa lên trước, ra sau hoặc bỏ đi." : "Giỏ đang trống."}
+                {count > 0 ? "Kéo từng món để dời chỗ. Bấm vào một món để đưa lên trước, ra sau hoặc bỏ đi." : "Hộp đang trống."}
               </p>
             )}
           </div>
@@ -416,7 +368,7 @@ export function BasketBuilder({
 
         {/* Món để chọn */}
         <h2 className="mt-9 font-display text-[1.35rem]">Chọn trái cây</h2>
-        <p className="mt-1 text-[0.92rem] text-muted">Kéo vào đúng chỗ bạn muốn trong giỏ, hoặc bấm để thêm rồi dời sau.</p>
+        <p className="mt-1 text-[0.92rem] text-muted">Kéo vào đúng chỗ bạn muốn trong hộp, hoặc bấm để thêm rồi dời sau.</p>
         <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           {fruits.map((f) => {
             const n = items.filter((i) => i.id === f.id).length;
@@ -425,7 +377,7 @@ export function BasketBuilder({
                 <button
                   type="button"
                   {...paletteHandlers(f.id)}
-                  aria-label={`Thêm ${f.name} vào giỏ, ${formatVnd(f.price)} một ${f.unit}`}
+                  aria-label={`Thêm ${f.name} vào hộp, ${formatVnd(f.price)} một ${f.unit}`}
                   className="group flex w-full cursor-grab touch-none select-none flex-col items-center rounded-2xl border border-line bg-white/70 px-3 pb-3 pt-3 text-center transition-colors duration-200 hover:border-forest-600 hover:bg-sage/40 active:cursor-grabbing"
                 >
                   <span className="relative block size-20 transition-transform duration-200 group-hover:-translate-y-1">
@@ -448,8 +400,8 @@ export function BasketBuilder({
       {/* Bảng tính tiền */}
       <aside className="lg:sticky lg:top-32 lg:self-start">
         <div className="rounded-[26px] border border-line bg-white/80 p-6">
-          <h2 className="font-display text-[1.25rem]">Kiểu giỏ</h2>
-          <div className="mt-3 space-y-2" role="radiogroup" aria-label="Kiểu giỏ">
+          <h2 className="font-display text-[1.25rem]">Kiểu hộp</h2>
+          <div className="mt-3 space-y-2" role="radiogroup" aria-label="Kiểu hộp">
             {baskets.map((b) => {
               const on = b.id === basket.id;
               return (
@@ -470,7 +422,7 @@ export function BasketBuilder({
             })}
           </div>
 
-          <h2 className="mt-7 font-display text-[1.25rem]">Trong giỏ</h2>
+          <h2 className="mt-7 font-display text-[1.25rem]">Trong hộp</h2>
           {lines.length === 0 ? (
             <p className="mt-2 text-[0.95rem] text-muted">Chưa có món nào.</p>
           ) : (
@@ -492,19 +444,19 @@ export function BasketBuilder({
 
           <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-5">
             <div>
-              <p className="font-display text-[1.25rem] leading-tight">Số giỏ</p>
-              <p className="text-[0.85rem] text-muted">Đặt nhiều giỏ giống nhau</p>
+              <p className="font-display text-[1.25rem] leading-tight">Số hộp</p>
+              <p className="text-[0.85rem] text-muted">Đặt nhiều hộp giống nhau</p>
             </div>
             <Stepper
               value={box.qty}
-              label="một giỏ"
+              label="một hộp"
               onMinus={() => update({ qty: Math.max(1, box.qty - 1) })}
               onPlus={() => update({ qty: Math.min(999, box.qty + 1) })}
               minusDisabled={box.qty <= 1}
             />
           </div>
           <label className="mt-3 flex items-center justify-end gap-2 text-[0.85rem] text-muted">
-            Nhập số giỏ
+            Nhập số hộp
             <input
               type="number"
               min={1}
@@ -518,11 +470,11 @@ export function BasketBuilder({
 
           <dl className="mt-6 space-y-2 border-t border-line pt-5 tabular-nums">
             <div className="flex justify-between gap-3 text-[0.95rem]">
-              <dt className="text-muted">Một giỏ</dt>
+              <dt className="text-muted">Một hộp</dt>
               <dd className="font-semibold">{formatVnd(perBasket)}</dd>
             </div>
             <div className="flex justify-between gap-3 text-[0.95rem]">
-              <dt className="text-muted">Số giỏ</dt>
+              <dt className="text-muted">Số hộp</dt>
               <dd className="font-semibold">× {box.qty}</dd>
             </div>
             <div className="flex items-end justify-between gap-3 pt-2">

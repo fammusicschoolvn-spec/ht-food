@@ -94,10 +94,10 @@ export function ContentForm({ content }: { content: Content }) {
         <Field name="boxIntro" label="Lời dẫn" value={box.intro} rows={2} />
         <Field
           name="boxBaskets"
-          label="Các kiểu giỏ"
+          label="Các kiểu hộp"
           value={box.baskets.join("\n")}
           rows={4}
-          help="Mỗi dòng một kiểu, theo mẫu: Tên | giá | số món tối đa. Ví dụ: Giỏ mây nhỏ | 80000 | 8"
+          help="Mỗi dòng một kiểu, theo mẫu: Tên | giá | số món tối đa. Tên có chữ “lục giác” dùng ảnh hộp lục giác, tên khác dùng ảnh hộp chữ nhật quai nơ."
         />
         <Field
           name="boxFruits"

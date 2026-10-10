@@ -143,14 +143,13 @@ export const defaultContent: Content = {
     body: "Sản phẩm của danh mục này đang được cập nhật lên website. Nhắn Zalo để HT Food gửi hình các loại đang có tại cửa hàng.",
   },
   box: {
-    title: "Tự tay xếp giỏ quà của bạn.",
-    intro: "Chọn kiểu giỏ, kéo từng loại trái cây đặt vào đúng chỗ bạn muốn và xem tổng tiền ngay. Cần nhiều giỏ giống nhau cho công ty, chỉ việc nhập số giỏ.",
+    title: "Tự tay xếp hộp quà của bạn.",
+    intro: "Chọn kiểu hộp, kéo từng loại trái cây đặt vào đúng chỗ bạn muốn và xem tổng tiền ngay. Cần nhiều hộp giống nhau cho công ty, chỉ việc nhập số hộp.",
     priceNote: "Giá trên trang này đang là giá minh họa. HT Food sẽ xác nhận giá chính thức khi bạn gửi đơn.",
     // Giá dưới đây là giá minh họa để chạy thử tính năng; chủ cửa hàng sửa trong trang quản trị.
     baskets: [
-      "Giỏ mây nhỏ | 80000 | 8",
-      "Giỏ mây vừa | 120000 | 12",
-      "Giỏ mây lớn | 160000 | 16",
+      "Hộp chữ nhật quai nơ | 60000 | 10",
+      "Hộp lục giác | 70000 | 10",
     ],
     fruits: [
       "Táo | 35000 | trái",

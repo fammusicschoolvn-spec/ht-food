@@ -1,7 +1,8 @@
 import { slugify } from "./format";
 
 // Dữ liệu cho trang "Tự xếp giỏ quà".
-// Quản trị nhập mỗi dòng một mục: "Tên | giá | đơn vị" (món) và "Tên | giá | sức chứa" (giỏ).
+// Quản trị nhập mỗi dòng một mục: "Tên | giá | đơn vị" (món) và "Tên | giá | sức chứa" (hộp).
+// Tên hộp có chữ "lục giác" dùng ảnh hộp lục giác, còn lại dùng ảnh hộp chữ nhật.
 
 /** Ảnh thật tách nền trong `public/trai/`: [tên file, bề rộng so với khung giỏ, tỉ lệ rộng/cao]. */
 const PHOTOS = {
@@ -37,7 +38,22 @@ export type FruitOption = {
   ratio: number;
 };
 
-export type BasketOption = { id: string; name: string; price: number; capacity: number };
+/** Ảnh hộp thật trong `public/hop/`. `front` là vùng thành hộp phía trước (clip-path), vẽ đè lên các món để món trông như nằm trong hộp. */
+const BOXES = {
+  rect: { image: "/hop/chu-nhat.webp", ratio: 1200 / 890, front: "polygon(0 63.7%, 100% 46.7%, 100% 100%, 0 100%)" },
+  hex: { image: "/hop/luc-giac.webp", ratio: 1200 / 898, front: "polygon(0 36.5%, 23.4% 72%, 76.6% 71.6%, 100% 37.6%, 100% 100%, 0 100%)" },
+} as const;
+
+export type BasketOption = {
+  id: string;
+  name: string;
+  price: number;
+  capacity: number;
+  image: string;
+  /** Tỉ lệ rộng/cao của ảnh hộp. */
+  ratio: number;
+  front: string;
+};
 
 /** Chọn ảnh theo tên món do quản trị nhập. */
 function kindOf(name: string): Kind | null {
@@ -81,11 +97,9 @@ export function parseBaskets(lines: string[]): BasketOption[] {
     const id = slugify(name ?? "");
     if (!id || seen.has(id)) return [];
     seen.add(id);
-    return [{ id, name, price: money(price), capacity: Math.min(24, Math.max(4, money(capacity) || 10)) }];
+    const box = id.includes("luc-giac") ? BOXES.hex : BOXES.rect;
+    return [{ id, name, price: money(price), capacity: Math.min(24, Math.max(4, money(capacity) || 10)), ...box }];
   });
 }
 
 export const formatVnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
-
-/** Nửa chiều rộng miệng giỏ trong khung vẽ 400×380: giỏ chứa nhiều thì rộng hơn. */
-export const rimHalfWidth = (capacity: number) => Math.min(178, Math.max(3, Math.round(Math.sqrt(capacity * 1.4))) * 36 + 22);
