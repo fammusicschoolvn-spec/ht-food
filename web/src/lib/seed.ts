@@ -117,7 +117,7 @@ export const defaultContent: Content = {
     title: "Món quà tươi ngon, gói ghém chỉn chu.",
     subtitle:
       "HT Food chọn trái cây nhập khẩu và bánh kẹo ngoại, sắp thành giỏ quà, hộp quà theo đúng ngân sách của bạn. Đặt qua Zalo, nhận tại 136 Hùng Vương, Gia Ray.",
-    image: "/hero/nen-trai-cay.webp",
+    image: "/hero/nen-banh-keo.webp",
     imageSmall: "/products/hop-trai-tim-xanh-la.webp",
   },
   about: {

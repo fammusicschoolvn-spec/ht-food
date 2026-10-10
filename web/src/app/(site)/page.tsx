@@ -25,7 +25,7 @@ export default async function HomePage() {
   return (
     <>
       {/* Mở đầu: ảnh trái cây bày quanh viền, chữ nằm ở khoảng trống giữa ảnh */}
-      <section className="relative isolate overflow-hidden bg-[#8bc7c7]">
+      <section className="relative isolate overflow-hidden bg-[#ede2cf]">
         <Image
           src={hero.image}
           alt=""
@@ -35,7 +35,7 @@ export default async function HomePage() {
           className="-z-20 object-cover"
         />
         {/* Điện thoại: khung hẹp nên trái cây lấn vào chữ, phủ một lớp màu nền cho dễ đọc. */}
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[#8bc7c7]/60 lg:hidden" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-[#ede2cf]/70 lg:hidden" />
         <div className="container-x flex min-h-[560px] flex-col items-center justify-center py-20 text-center lg:min-h-[660px]">
           <p className="rise text-[0.9rem] font-semibold uppercase tracking-[0.16em] text-forest-900">{hero.eyebrow}</p>
           <h1 className="display rise rise-2 mt-5 max-w-[42rem] text-[clamp(2.1rem,4.6vw,3.7rem)] uppercase leading-[1.14] text-forest-950">
@@ -53,7 +53,7 @@ export default async function HomePage() {
               Xem mẫu quà
               <ArrowIcon width={18} height={18} />
             </Link>
-            <Link href="/tu-chon-hop-qua" className="btn bg-cream px-7 uppercase tracking-[0.06em] text-forest-900 hover:bg-white">
+            <Link href="/tu-chon-hop-qua" className="btn btn-gold px-7 uppercase tracking-[0.06em]">
               <BoxIcon />
               Tự chọn hộp quà
             </Link>
@@ -168,7 +168,7 @@ export default async function HomePage() {
             </ul>
           </div>
           <div className="relative min-h-[260px]">
-            <Image src="/hero/cherry.webp" alt="" fill sizes="(min-width: 1024px) 440px, 100vw" className="object-cover" />
+            <Image src="/hero/kiwi.webp" alt="" fill sizes="(min-width: 1024px) 440px, 100vw" className="object-cover" />
           </div>
         </div>
       </section>
