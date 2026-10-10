@@ -1,44 +1,58 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { EMPTY_BOX, setBox, useBox, type BoxDraft } from "@/lib/box-store";
-import { formatVnd, KIND_SIZE, rimHalfWidth, slotsFor, type BasketOption, type FruitOption } from "@/lib/builder";
-import { FruitArt, FruitDefs, FruitIcon } from "./fruit-art";
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { EMPTY_BOX, newUid, setBox, useBox, type BoxDraft, type Placed } from "@/lib/box-store";
+import { formatVnd, rimHalfWidth, type BasketOption, type FruitOption } from "@/lib/builder";
 import { ChatIcon, PhoneIcon } from "./icons";
 
 const RIBBONS = ["#0b3d17", "#8e1218", "#c5a253", "#3b4f94"];
 
-/* ---------- Giỏ và trái cây trong giỏ ---------- */
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-type Unit = { key: string; fruit: FruitOption };
+/* ---------- Hình món ---------- */
 
-function Stage({
-  basket,
-  ribbon,
-  units,
-  dropping,
-  onRemove,
-}: {
-  basket: BasketOption;
-  ribbon: string;
-  units: Unit[];
-  dropping: boolean;
-  onRemove: (id: string) => void;
-}) {
-  const rw = rimHalfWidth(basket.capacity);
-  const slots = useMemo(() => slotsFor(basket.capacity), [basket.capacity]);
+/** Ảnh thật của món; món chưa có ảnh thì hiện hộp quà. */
+function ItemArt({ fruit, sizes }: { fruit: FruitOption; sizes: string }) {
+  if (fruit.image) {
+    return <Image src={fruit.image} alt="" fill sizes={sizes} draggable={false} className="pointer-events-none select-none object-contain" />;
+  }
+  return (
+    <svg viewBox="-26 -32 52 56" className="pointer-events-none absolute inset-0 size-full" aria-hidden>
+      <rect x="-22" y="-18" width="44" height="38" rx="5" fill="#c5a253" />
+      <rect x="-4" y="-18" width="8" height="38" fill="#0b3d17" />
+      <rect x="-22" y="-4" width="44" height="8" fill="#0b3d17" />
+      <path d="M0-18C-10-30-18-22-10-18ZM0-18C10-30 18-22 10-18Z" fill="#0b3d17" />
+    </svg>
+  );
+}
+
+/* ---------- Giỏ: phần sau nằm dưới các món, phần trước nằm đè lên ---------- */
+
+function basketPath(rw: number) {
   const L = 200 - rw;
   const R = 200 + rw;
-  const bw = rw * 0.8; // nửa chiều rộng đáy giỏ
+  const bw = rw * 0.8;
+  return { L, R, body: `M${L} 222Q${L + 4} 300 ${200 - bw} 338Q200 356 ${200 + bw} 338Q${R - 4} 300 ${R} 222Q200 250 ${L} 222Z` };
+}
 
-  // Trái lớn xếp trước nên nằm lớp dưới; vẽ lớp trên trước để lớp dưới che lên như nhìn từ phía trước.
-  const placed = units
-    .map((u, i) => ({ ...u, slot: slots[i], n: i }))
-    .filter((u) => u.slot)
-    .sort((a, b) => b.slot.layer - a.slot.layer || Math.abs(b.slot.x - 200) - Math.abs(a.slot.x - 200));
-
+function BasketBack({ rw }: { rw: number }) {
+  const { L, R } = basketPath(rw);
   return (
-    <svg viewBox="0 0 400 380" className="block h-auto w-full" role="img" aria-label={`${basket.name} đang có ${units.length} món`}>
+    <svg viewBox="0 0 400 380" className="absolute inset-0 size-full" aria-hidden>
+      <ellipse cx="200" cy="350" rx={rw * 0.95} ry="14" fill="rgb(7 47 15 / 0.16)" />
+      <path d={`M${L + 14} 224C${L + 14} 6 ${R - 14} 6 ${R - 14} 224`} fill="none" stroke="#a8773a" strokeWidth="11" strokeLinecap="round" />
+      <path d={`M${L + 14} 224C${L + 14} 6 ${R - 14} 6 ${R - 14} 224`} fill="none" stroke="#f0d6a6" strokeWidth="3" strokeDasharray="7 9" strokeLinecap="round" />
+      <ellipse cx="200" cy="222" rx={rw} ry="22" fill="#6b4a26" />
+      <ellipse cx="200" cy="226" rx={rw - 10} ry="16" fill="#f4ecd6" opacity="0.9" />
+    </svg>
+  );
+}
+
+function BasketFront({ rw, ribbon }: { rw: number; ribbon: string }) {
+  const { L, R, body } = basketPath(rw);
+  return (
+    <svg viewBox="0 0 400 380" className="pointer-events-none absolute inset-0 size-full" aria-hidden>
       <defs>
         <linearGradient id="bk-body" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#e2bd84" />
@@ -49,59 +63,22 @@ function Stage({
           <path d="M0 9h9M9 3h9" stroke="#f3dbb0" strokeWidth="2.4" strokeLinecap="round" opacity="0.6" />
         </pattern>
         <clipPath id="bk-clip">
-          <path d={`M${L} 222Q${L + 4} 300 ${200 - bw} 338Q200 356 ${200 + bw} 338Q${R - 4} 300 ${R} 222Q200 250 ${L} 222Z`} />
+          <path d={body} />
         </clipPath>
       </defs>
-
-      <ellipse cx="200" cy="350" rx={rw * 0.95} ry="14" fill="rgb(7 47 15 / 0.16)" />
-
-      {/* quai giỏ nằm sau trái cây */}
-      <path d={`M${L + 14} 224C${L + 14} 6 ${R - 14} 6 ${R - 14} 224`} fill="none" stroke="#a8773a" strokeWidth="11" strokeLinecap="round" />
-      <path d={`M${L + 14} 224C${L + 14} 6 ${R - 14} 6 ${R - 14} 224`} fill="none" stroke="#f0d6a6" strokeWidth="3" strokeDasharray="7 9" strokeLinecap="round" />
-
-      {/* lòng giỏ */}
-      <ellipse cx="200" cy="222" rx={rw} ry="22" fill="#6b4a26" />
-      <ellipse cx="200" cy="226" rx={rw - 10} ry="16" fill="#f4ecd6" opacity="0.9" />
-
-      <g className={dropping ? "opacity-80" : ""}>
-        {placed.map((u) => {
-          const size = KIND_SIZE[u.fruit.kind];
-          const tilt = ((u.n * 37) % 25) - 12;
-          return (
-            <g key={u.key} className="basket-move" style={{ transform: `translate(${u.slot.x}px, ${u.slot.y - (size - 1) * 14}px)` }}>
-              <g className="basket-pop cursor-pointer" onClick={() => onRemove(u.fruit.id)}>
-                <title>{`Bấm để bỏ bớt ${u.fruit.name}`}</title>
-                <g transform={`rotate(${tilt}) scale(${size})`}>
-                  <FruitArt kind={u.fruit.kind} />
-                </g>
-              </g>
-            </g>
-          );
-        })}
-      </g>
-
-      {/* thân giỏ phía trước che phần dưới của trái cây */}
-      <path
-        d={`M${L} 222Q${L + 4} 300 ${200 - bw} 338Q200 356 ${200 + bw} 338Q${R - 4} 300 ${R} 222Q200 250 ${L} 222Z`}
-        fill="url(#bk-body)"
-      />
+      <path d={body} fill="url(#bk-body)" />
       <rect x={L} y="222" width={rw * 2} height="140" fill="url(#bk-weave)" clipPath="url(#bk-clip)" />
       <path d={`M${L} 222Q200 250 ${R} 222`} fill="none" stroke="#c99b58" strokeWidth="11" strokeLinecap="round" />
       <path d={`M${L} 222Q200 250 ${R} 222`} fill="none" stroke="#f3dbb0" strokeWidth="3" strokeDasharray="6 8" strokeLinecap="round" />
-
-      {/* dải nơ */}
       <g clipPath="url(#bk-clip)">
         <path d={`M${L - 4} 268Q200 296 ${R + 4} 268V294Q200 322 ${L - 4} 294Z`} fill={ribbon} />
         <path d={`M${L - 4} 272Q200 300 ${R + 4} 272`} fill="none" stroke="#fff" strokeWidth="1.5" opacity="0.35" />
       </g>
-      <g transform="translate(200 296)">
-        <g stroke="rgb(255 255 255 / 0.28)" strokeWidth="1.2">
-          <path d="M-4 4L-22 44-8 38-4 52 2 10ZM4 4L22 44 8 38 4 52-2 10Z" fill={ribbon} />
-          <path d="M0 0C-16-20-46-22-44 0C-46 20-16 16 0 0Z" fill={ribbon} />
-          <path d="M0 0C16-20 46-22 44 0C46 20 16 16 0 0Z" fill={ribbon} />
-        </g>
-        <path d="M-6-4C-18-12-34-12-36-2M6-4C18-12 34-12 36-2" fill="none" stroke="#fff" strokeWidth="1.5" opacity="0.35" />
-        <rect x="-8" y="-8" width="16" height="16" rx="5" fill={ribbon} stroke="rgb(255 255 255 / 0.3)" />
+      <g transform="translate(200 296)" stroke="rgb(255 255 255 / 0.28)" strokeWidth="1.2">
+        <path d="M-4 4L-22 44-8 38-4 52 2 10ZM4 4L22 44 8 38 4 52-2 10Z" fill={ribbon} />
+        <path d="M0 0C-16-20-46-22-44 0C-46 20-16 16 0 0Z" fill={ribbon} />
+        <path d="M0 0C16-20 46-22 44 0C46 20 16 16 0 0Z" fill={ribbon} />
+        <rect x="-8" y="-8" width="16" height="16" rx="5" fill={ribbon} />
       </g>
     </svg>
   );
@@ -143,6 +120,8 @@ function Stepper({
 
 /* ---------- Trang xếp giỏ ---------- */
 
+type Moving = { uid: string; x: number; y: number };
+
 export function BasketBuilder({
   baskets,
   fruits,
@@ -162,67 +141,91 @@ export function BasketBuilder({
 }) {
   const box = useBox();
   const [status, setStatus] = useState("");
+  const [selected, setSelected] = useState("");
+  /** Món đang được kéo trong giỏ: vị trí tạm, chỉ ghi lại khi thả tay. */
+  const [moving, setMoving] = useState<Moving | null>(null);
+  /** Món đang được kéo từ danh sách vào giỏ. */
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; over: boolean } | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const pending = useRef<{ id: string; x: number; y: number } | null>(null);
+  const pending = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
+  const grab = useRef<{ dx: number; dy: number } | null>(null);
 
   const basketIndex = Math.max(0, baskets.findIndex((b) => b.id === box.basket));
   const basket = baskets[basketIndex];
+  const byId = new Map(fruits.map((f) => [f.id, f]));
 
-  // Bỏ qua những mục khách đã chọn nhưng cửa hàng đã gỡ khỏi danh sách.
-  const lines = fruits.map((f) => ({ fruit: f, n: box.counts[f.id] ?? 0 })).filter((l) => l.n > 0);
-  const count = lines.reduce((a, l) => a + l.n, 0);
+  // Bỏ qua những món khách đã đặt nhưng cửa hàng đã gỡ khỏi danh sách.
+  const items = box.items.filter((i) => byId.has(i.id));
+  const count = items.length;
   const full = count >= basket.capacity;
-
-  const units: Unit[] = lines
-    .flatMap((l) => Array.from({ length: l.n }, (_, i) => ({ key: `${l.fruit.id}#${i}`, fruit: l.fruit })))
-    .sort((a, b) => KIND_SIZE[b.fruit.kind] - KIND_SIZE[a.fruit.kind] || a.fruit.id.localeCompare(b.fruit.id));
+  const lines = fruits.map((f) => ({ fruit: f, n: items.filter((i) => i.id === f.id).length })).filter((l) => l.n > 0);
 
   const perBasket = basket.price + lines.reduce((a, l) => a + l.n * l.fruit.price, 0);
   const total = perBasket * box.qty;
 
   const update = (patch: Partial<BoxDraft>) => {
-    setBox({ ...box, ...patch });
+    setBox({ ...box, items, ...patch });
     setStatus("");
   };
 
-  function add(id: string) {
+  /** Vị trí con trỏ theo tỉ lệ khung giỏ. */
+  const toStage = (clientX: number, clientY: number) => {
+    const r = stageRef.current?.getBoundingClientRect();
+    if (!r) return { x: 0.5, y: 0.5, inside: false };
+    const x = (clientX - r.left) / r.width;
+    const y = (clientY - r.top) / r.height;
+    return { x, y, inside: x >= 0 && x <= 1 && y >= 0 && y <= 1 };
+  };
+
+  function add(id: string, at?: { x: number; y: number }) {
     if (full) {
-      setStatus(`${basket.name} đã đầy (${basket.capacity} món). Chọn giỏ lớn hơn hoặc bớt một món.`);
+      setStatus(`${basket.name} đã đầy (${basket.capacity} món). Chọn giỏ lớn hơn hoặc bỏ bớt một món.`);
       return;
     }
-    update({ counts: { ...box.counts, [id]: (box.counts[id] ?? 0) + 1 } });
+    // Bấm để thêm: rải quanh giữa lòng giỏ để các món không chồng khít lên nhau.
+    const n = count;
+    const spot = at ?? { x: 0.5 + (((n * 37) % 41) - 20) / 100, y: 0.4 + ((n * 53) % 15) / 100 };
+    const uid = newUid();
+    update({ items: [...items, { uid, id, x: clamp(spot.x, 0.08, 0.92), y: clamp(spot.y, 0.08, 0.86) }] });
+    setSelected(uid);
   }
 
-  function remove(id: string) {
-    const next = { ...box.counts };
-    if ((next[id] ?? 0) <= 1) delete next[id];
-    else next[id] -= 1;
-    update({ counts: next });
+  const removeUid = (uid: string) => {
+    update({ items: items.filter((i) => i.uid !== uid) });
+    if (selected === uid) setSelected("");
+  };
+
+  function removeOne(id: string) {
+    const last = [...items].reverse().find((i) => i.id === id);
+    if (last) removeUid(last.uid);
+  }
+
+  /** Đổi thứ tự chồng: món ở cuối danh sách nằm trên cùng. */
+  function restack(uid: string, toFront: boolean) {
+    const it = items.find((i) => i.uid === uid);
+    if (!it) return;
+    const rest = items.filter((i) => i.uid !== uid);
+    update({ items: toFront ? [...rest, it] : [it, ...rest] });
   }
 
   function chooseBasket(b: BasketOption) {
     if (count > b.capacity) {
-      setStatus(`${b.name} chỉ chứa ${b.capacity} món, giỏ của bạn đang có ${count}. Hãy bớt món trước khi đổi.`);
+      setStatus(`${b.name} chỉ chứa ${b.capacity} món, giỏ của bạn đang có ${count}. Hãy bỏ bớt món trước khi đổi.`);
       return;
     }
     update({ basket: b.id });
   }
 
-  /* Kéo thả bằng chuột hoặc ngón tay: nút giữ con trỏ (pointer capture) nên vẫn nhận sự kiện khi kéo ra ngoài. */
-  const overStage = (x: number, y: number) => {
-    const r = stageRef.current?.getBoundingClientRect();
-    return Boolean(r && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
-  };
-  const dragHandlers = (id: string) => ({
+  /* Kéo món từ danh sách vào giỏ. Nút giữ con trỏ nên vẫn nhận sự kiện khi kéo ra ngoài. */
+  const paletteHandlers = (id: string) => ({
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
-      pending.current = { id, x: e.clientX, y: e.clientY };
+      pending.current = { x: e.clientX, y: e.clientY };
       dragged.current = false;
       try {
         e.currentTarget.setPointerCapture(e.pointerId);
       } catch {
-        // Con trỏ không giữ được (hiếm gặp): vẫn kéo được trong phạm vi nút.
+        // Không giữ được con trỏ (hiếm gặp): vẫn kéo được trong phạm vi nút.
       }
     },
     onPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -230,13 +233,14 @@ export function BasketBuilder({
       if (!start) return;
       if (!dragged.current && Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
       dragged.current = true;
-      setDrag({ id, x: e.clientX, y: e.clientY, over: overStage(e.clientX, e.clientY) });
+      setDrag({ id, x: e.clientX, y: e.clientY, over: toStage(e.clientX, e.clientY).inside });
     },
     onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
       const wasDragging = pending.current && dragged.current;
       pending.current = null;
       setDrag(null);
-      if (wasDragging && overStage(e.clientX, e.clientY)) add(id);
+      const p = toStage(e.clientX, e.clientY);
+      if (wasDragging && p.inside) add(id, p);
     },
     onPointerCancel: () => {
       pending.current = null;
@@ -245,6 +249,57 @@ export function BasketBuilder({
     // Kéo xong trình duyệt vẫn bắn "click": chỉ coi là bấm khi không kéo.
     onClick: () => {
       if (!dragged.current) add(id);
+    },
+  });
+
+  /* Kéo món đã nằm trong giỏ sang vị trí khác; kéo ra ngoài khung là bỏ món đó. */
+  const placedHandlers = (it: Placed) => ({
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+      const p = toStage(e.clientX, e.clientY);
+      grab.current = { dx: p.x - it.x, dy: p.y - it.y };
+      setSelected(it.uid);
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // như trên
+      }
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!grab.current) return;
+      const p = toStage(e.clientX, e.clientY);
+      setMoving({ uid: it.uid, x: p.x - grab.current.dx, y: p.y - grab.current.dy });
+    },
+    onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
+      const g = grab.current;
+      grab.current = null;
+      setMoving(null);
+      if (!g) return;
+      const p = toStage(e.clientX, e.clientY);
+      if (!p.inside) {
+        removeUid(it.uid);
+        return;
+      }
+      const x = clamp(p.x - g.dx, 0.04, 0.96);
+      const y = clamp(p.y - g.dy, 0.04, 0.9);
+      if (Math.abs(x - it.x) < 0.004 && Math.abs(y - it.y) < 0.004) return; // chỉ bấm chọn, không dời
+      // Món vừa dời được đưa lên trên cùng, giống như vừa đặt vào giỏ.
+      update({ items: [...items.filter((i) => i.uid !== it.uid), { ...it, x, y }] });
+    },
+    onPointerCancel: () => {
+      grab.current = null;
+      setMoving(null);
+    },
+    onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const step = e.shiftKey ? 0.05 : 0.02;
+      const move: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+      if (move[e.key]) {
+        e.preventDefault();
+        const [dx, dy] = move[e.key];
+        update({ items: items.map((i) => (i.uid === it.uid ? { ...i, x: clamp(i.x + dx, 0.04, 0.96), y: clamp(i.y + dy, 0.04, 0.9) } : i)) });
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        removeUid(it.uid);
+      }
     },
   });
 
@@ -271,17 +326,18 @@ export function BasketBuilder({
     if (openZalo && zalo) window.open(zalo, "_blank", "noopener,noreferrer");
   }
 
-  const dragFruit = drag && fruits.find((f) => f.id === drag.id);
+  const rw = rimHalfWidth(basket.capacity);
+  const dragFruit = drag && byId.get(drag.id);
+  const selectedItem = items.find((i) => i.uid === selected);
+  const selectedFruit = selectedItem && byId.get(selectedItem.id);
+  const toolBtn = "a-btn a-btn-ghost min-h-11 px-3 text-[0.85rem]";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-12">
-      <FruitDefs />
-
       <div className="min-w-0">
-        {/* Giỏ */}
+        {/* Khung giỏ */}
         <div
-          ref={stageRef}
-          className={`relative mx-auto max-w-[560px] rounded-[30px] border-2 border-dashed bg-gradient-to-b from-sage/50 to-ivory/60 px-4 pb-2 pt-4 transition-colors duration-200 ${
+          className={`mx-auto max-w-[620px] rounded-[30px] border-2 border-dashed bg-gradient-to-b from-sage/50 to-ivory/60 p-4 transition-colors duration-200 ${
             drag?.over ? "border-forest-600 bg-sage" : "border-line"
           }`}
         >
@@ -291,41 +347,101 @@ export function BasketBuilder({
               {count}/{basket.capacity} món
             </p>
           </div>
-          <Stage basket={basket} ribbon={RIBBONS[basketIndex % RIBBONS.length]} units={units} dropping={Boolean(drag)} onRemove={remove} />
-          {count === 0 && (
-            <p className="pointer-events-none absolute inset-x-6 top-[30%] text-center text-[0.98rem] font-medium text-forest-800/80">
-              Kéo trái cây thả vào giỏ, hoặc bấm vào trái cây để thêm.
-            </p>
-          )}
+
+          <div ref={stageRef} className="relative mt-1 aspect-[400/380] w-full touch-none select-none" onPointerDown={(e) => e.target === e.currentTarget && setSelected("")}>
+            <BasketBack rw={rw} />
+            {items
+              .map((it, z) => ({ it, z }))
+              .sort((a, b) => a.it.uid.localeCompare(b.it.uid))
+              .map(({ it, z }) => {
+              const fruit = byId.get(it.id)!;
+              const pos = moving?.uid === it.uid ? moving : it;
+              const active = selected === it.uid;
+              return (
+                <div
+                  key={it.uid}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${fruit.name} trong giỏ. Kéo để dời chỗ, phím mũi tên để nhích, Delete để bỏ.`}
+                  aria-pressed={active}
+                  {...placedHandlers(it)}
+                  className={`basket-pop absolute cursor-grab touch-none rounded-2xl outline-offset-2 active:cursor-grabbing ${
+                    active ? "outline-2 outline-dashed outline-forest-600" : ""
+                  } ${moving?.uid === it.uid ? "drop-shadow-[0_14px_14px_rgb(7_47_15/0.35)]" : "drop-shadow-[0_5px_5px_rgb(7_47_15/0.22)]"}`}
+                  style={{
+                    left: `${pos.x * 100}%`,
+                    top: `${pos.y * 100}%`,
+                    width: `${fruit.size * 100}%`,
+                    aspectRatio: String(fruit.ratio),
+                    translate: "-50% -50%",
+                    zIndex: moving?.uid === it.uid ? 100 : z + 1,
+                  }}
+                >
+                  <ItemArt fruit={fruit} sizes="180px" />
+                </div>
+              );
+            })}
+            <div className="absolute inset-0 z-[90] pointer-events-none">
+              <BasketFront rw={rw} ribbon={RIBBONS[basketIndex % RIBBONS.length]} />
+            </div>
+            {count === 0 && (
+              <p className="pointer-events-none absolute inset-x-6 top-[30%] z-[95] text-center text-[0.98rem] font-medium text-forest-800/80">
+                Kéo trái cây thả vào giỏ, hoặc bấm vào trái cây để thêm.
+              </p>
+            )}
+          </div>
+
+          {/* Thao tác với món đang chọn */}
+          <div className="mt-2 flex min-h-11 flex-wrap items-center justify-center gap-2">
+            {selectedItem && selectedFruit ? (
+              <>
+                <span className="mr-1 text-[0.9rem] font-semibold">{selectedFruit.name}:</span>
+                <button type="button" className={toolBtn} onClick={() => restack(selectedItem.uid, true)}>
+                  Đưa lên trước
+                </button>
+                <button type="button" className={toolBtn} onClick={() => restack(selectedItem.uid, false)}>
+                  Đưa ra sau
+                </button>
+                <button type="button" className="a-btn a-btn-danger min-h-11 px-3 text-[0.85rem]" onClick={() => removeUid(selectedItem.uid)}>
+                  Bỏ khỏi giỏ
+                </button>
+              </>
+            ) : (
+              <p className="text-center text-[0.88rem] text-muted">
+                {count > 0 ? "Kéo từng món để dời chỗ. Bấm vào một món để đưa lên trước, ra sau hoặc bỏ đi." : "Giỏ đang trống."}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Trái cây để chọn */}
+        {/* Món để chọn */}
         <h2 className="mt-9 font-display text-[1.35rem]">Chọn trái cây</h2>
-        <p className="mt-1 text-[0.92rem] text-muted">Kéo vào giỏ hoặc bấm để thêm. Bấm vào trái trong giỏ để bỏ bớt.</p>
+        <p className="mt-1 text-[0.92rem] text-muted">Kéo vào đúng chỗ bạn muốn trong giỏ, hoặc bấm để thêm rồi dời sau.</p>
         <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-          {fruits.map((f) => (
-            <li key={f.id}>
-              <button
-                type="button"
-                {...dragHandlers(f.id)}
-                aria-label={`Thêm ${f.name} vào giỏ, ${formatVnd(f.price)} một ${f.unit}`}
-                className="group flex w-full cursor-grab touch-none select-none flex-col items-center rounded-2xl border border-line bg-white/70 px-3 pb-3 pt-2 text-center transition-colors duration-200 hover:border-forest-600 hover:bg-sage/40 active:cursor-grabbing"
-              >
-                <span className="transition-transform duration-200 group-hover:-translate-y-1">
-                  <FruitIcon kind={f.kind} size={64} />
-                </span>
-                <span className="mt-1 flex min-h-[2.6em] items-center text-[0.95rem] font-semibold leading-[1.3]">{f.name}</span>
-                <span className="text-[0.85rem] text-gold-deep">
-                  {formatVnd(f.price)} / {f.unit}
-                </span>
-                {(box.counts[f.id] ?? 0) > 0 && (
-                  <span className="mt-1.5 rounded-full bg-forest-800 px-2.5 py-0.5 text-[0.75rem] font-semibold text-cream">
-                    Đã thêm {box.counts[f.id]}
+          {fruits.map((f) => {
+            const n = items.filter((i) => i.id === f.id).length;
+            return (
+              <li key={f.id}>
+                <button
+                  type="button"
+                  {...paletteHandlers(f.id)}
+                  aria-label={`Thêm ${f.name} vào giỏ, ${formatVnd(f.price)} một ${f.unit}`}
+                  className="group flex w-full cursor-grab touch-none select-none flex-col items-center rounded-2xl border border-line bg-white/70 px-3 pb-3 pt-3 text-center transition-colors duration-200 hover:border-forest-600 hover:bg-sage/40 active:cursor-grabbing"
+                >
+                  <span className="relative block size-20 transition-transform duration-200 group-hover:-translate-y-1">
+                    <ItemArt fruit={f} sizes="80px" />
                   </span>
-                )}
-              </button>
-            </li>
-          ))}
+                  <span className="mt-2 flex min-h-[2.6em] items-center text-[0.95rem] font-semibold leading-[1.3]">{f.name}</span>
+                  <span className="text-[0.85rem] text-gold-deep">
+                    {formatVnd(f.price)} / {f.unit}
+                  </span>
+                  <span className={`mt-1.5 rounded-full px-2.5 py-0.5 text-[0.75rem] font-semibold ${n > 0 ? "bg-forest-800 text-cream" : "invisible"}`}>
+                    Đã thêm {n}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
@@ -361,12 +477,14 @@ export function BasketBuilder({
             <ul className="mt-2 divide-y divide-line">
               {lines.map((l) => (
                 <li key={l.fruit.id} className="flex items-center gap-3 py-2.5">
-                  <FruitIcon kind={l.fruit.kind} size={36} />
+                  <span className="relative block size-10 shrink-0">
+                    <ItemArt fruit={l.fruit} sizes="40px" />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold leading-tight">{l.fruit.name}</p>
                     <p className="text-[0.85rem] tabular-nums text-muted">{formatVnd(l.n * l.fruit.price)}</p>
                   </div>
-                  <Stepper value={l.n} label={l.fruit.name} onMinus={() => remove(l.fruit.id)} onPlus={() => add(l.fruit.id)} plusDisabled={full} />
+                  <Stepper value={l.n} label={l.fruit.name} onMinus={() => removeOne(l.fruit.id)} onPlus={() => add(l.fruit.id)} plusDisabled={full} />
                 </li>
               ))}
             </ul>
@@ -377,15 +495,13 @@ export function BasketBuilder({
               <p className="font-display text-[1.25rem] leading-tight">Số giỏ</p>
               <p className="text-[0.85rem] text-muted">Đặt nhiều giỏ giống nhau</p>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Stepper
-                value={box.qty}
-                label="một giỏ"
-                onMinus={() => update({ qty: Math.max(1, box.qty - 1) })}
-                onPlus={() => update({ qty: Math.min(999, box.qty + 1) })}
-                minusDisabled={box.qty <= 1}
-              />
-            </div>
+            <Stepper
+              value={box.qty}
+              label="một giỏ"
+              onMinus={() => update({ qty: Math.max(1, box.qty - 1) })}
+              onPlus={() => update({ qty: Math.min(999, box.qty + 1) })}
+              minusDisabled={box.qty <= 1}
+            />
           </div>
           <label className="mt-3 flex items-center justify-end gap-2 text-[0.85rem] text-muted">
             Nhập số giỏ
@@ -395,7 +511,7 @@ export function BasketBuilder({
               max={999}
               inputMode="numeric"
               value={box.qty}
-              onChange={(e) => update({ qty: Math.min(999, Math.max(1, Math.floor(Number(e.target.value) || 1))) })}
+              onChange={(e) => update({ qty: clamp(Math.floor(Number(e.target.value) || 1), 1, 999) })}
               className="a-input w-24 text-right tabular-nums"
             />
           </label>
@@ -466,6 +582,7 @@ export function BasketBuilder({
               type="button"
               onClick={() => {
                 setBox({ ...EMPTY_BOX, basket: box.basket });
+                setSelected("");
                 setStatus("");
               }}
               className="min-h-11 cursor-pointer text-[0.9rem] text-muted underline underline-offset-4 hover:text-ink"
@@ -481,14 +598,14 @@ export function BasketBuilder({
         )}
       </aside>
 
-      {/* Trái cây đang được kéo */}
+      {/* Món đang được kéo từ danh sách */}
       {drag && dragFruit && (
         <div
           aria-hidden
-          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_12px_14px_rgb(7_47_15/0.35)]"
+          className="pointer-events-none fixed z-50 size-24 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_12px_14px_rgb(7_47_15/0.35)]"
           style={{ left: drag.x, top: drag.y }}
         >
-          <FruitIcon kind={dragFruit.kind} size={84} />
+          <ItemArt fruit={dragFruit} sizes="96px" />
         </div>
       )}
     </div>

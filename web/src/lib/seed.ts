@@ -144,7 +144,7 @@ export const defaultContent: Content = {
   },
   box: {
     title: "Tự tay xếp giỏ quà của bạn.",
-    intro: "Chọn kiểu giỏ, kéo trái cây thả vào giỏ và xem tổng tiền ngay. Cần nhiều giỏ giống nhau cho công ty, chỉ việc nhập số giỏ.",
+    intro: "Chọn kiểu giỏ, kéo từng loại trái cây đặt vào đúng chỗ bạn muốn và xem tổng tiền ngay. Cần nhiều giỏ giống nhau cho công ty, chỉ việc nhập số giỏ.",
     priceNote: "Giá trên trang này đang là giá minh họa. HT Food sẽ xác nhận giá chính thức khi bạn gửi đơn.",
     // Giá dưới đây là giá minh họa để chạy thử tính năng; chủ cửa hàng sửa trong trang quản trị.
     baskets: [
@@ -162,9 +162,12 @@ export const defaultContent: Content = {
       "Dưa vàng | 150000 | trái",
       "Nho xanh | 150000 | chùm",
       "Nho đen | 120000 | chùm",
+      "Nho đỏ | 130000 | chùm",
       "Cherry | 120000 | phần",
       "Dâu tây | 90000 | phần",
       "Việt quất | 80000 | hộp",
+      "Thanh long | 40000 | trái",
+      "Thơm | 35000 | trái",
       "Bánh kẹo nhập khẩu | 100000 | hộp",
     ],
   },
