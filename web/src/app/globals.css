@@ -124,6 +124,45 @@ body {
   }
 }
 
+/* Lát trái cây bay qua lại trong ô mức giá khi rê chuột (hoặc tab) vào ô */
+@keyframes fly {
+  from {
+    transform: translateX(-14%);
+  }
+  to {
+    transform: translateX(86%);
+  }
+}
+@keyframes spin-slow {
+  to {
+    rotate: 360deg;
+  }
+}
+.fly-lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  animation: fly 3.4s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+.fly-lane img {
+  animation: spin-slow 7s linear infinite;
+  animation-play-state: paused;
+}
+.group:hover .fly-lane,
+.group:focus-visible .fly-lane {
+  opacity: 0.9;
+  animation-play-state: running;
+}
+.group:hover .fly-lane img,
+.group:focus-visible .fly-lane img {
+  animation-play-state: running;
+}
+
 /* Hiện dần khi vào trang: chỉ một nhịp nhẹ, tắt hẳn nếu máy bật giảm chuyển động. */
 @keyframes rise {
   from {
@@ -145,7 +184,8 @@ body {
   html {
     scroll-behavior: auto;
   }
-  *,
+  /* Riêng lát trái cây ở ô mức giá vẫn chạy: chủ cửa hàng yêu cầu, chỉ bật khi rê chuột và chuyển động chậm. */
+  *:not(.fly-lane):not(.fly-lane img),
   *::before,
   *::after {
     animation: none !important;

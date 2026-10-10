@@ -8,6 +8,14 @@ import { familyIds, topLevel } from "@/lib/categories";
 import { getCatalog, inTier, PRICE_TIERS } from "@/lib/data";
 import { mapEmbed, mapLink } from "@/lib/format";
 
+// Các lát trái cây bay trong ô mức giá: mỗi lát một làn, tốc độ và chiều khác nhau cho tự nhiên.
+const FLYERS = [
+  { src: "/fruit/cam.webp", size: 46, top: "8%", fly: "3.4s", spin: "7s", dir: "alternate" },
+  { src: "/fruit/kiwi.webp", size: 58, top: "38%", fly: "4.6s", spin: "9s", dir: "alternate-reverse" },
+  { src: "/fruit/cam.webp", size: 34, top: "66%", fly: "2.9s", spin: "6s", dir: "alternate-reverse" },
+  { src: "/fruit/kiwi.webp", size: 40, top: "72%", fly: "3.9s", spin: "8s", dir: "alternate" },
+] as const;
+
 export default async function HomePage() {
   const { products, categories, content } = await getCatalog();
   const { shop, hero, about, steps } = content;
@@ -183,10 +191,16 @@ export default async function HomePage() {
               <li key={tier.id}>
                 <Link
                   href={`/san-pham?gia=${tier.id}`}
-                  className="group flex h-full flex-col justify-between rounded-[22px] border border-line bg-white/70 p-7 transition-colors duration-300 hover:border-forest-800 hover:bg-forest-900 hover:text-cream"
+                  className="group relative flex h-full flex-col justify-between overflow-hidden rounded-[22px] border border-line bg-white/70 p-7 transition-colors duration-300 hover:border-forest-600 hover:bg-sage/50"
                 >
-                  <p className="min-h-[2.5em] font-display text-[1.3rem] font-bold leading-[1.25] text-balance">{tier.label}</p>
-                  <p className="mt-10 flex items-center justify-between text-[0.92rem] font-semibold text-muted transition-colors duration-300 group-hover:text-gold-soft">
+                  {/* Rê chuột vào: mấy lát trái cây bay qua lại phía sau chữ. */}
+                  {FLYERS.map((f, n) => (
+                    <span key={n} aria-hidden className="fly-lane" style={{ top: f.top, animationDuration: f.fly, animationDirection: f.dir }}>
+                      <Image src={f.src} alt="" width={f.size} height={f.size} style={{ animationDuration: f.spin }} />
+                    </span>
+                  ))}
+                  <p className="relative min-h-[2.5em] font-display text-[1.3rem] font-bold leading-[1.25] text-balance">{tier.label}</p>
+                  <p className="relative mt-10 flex items-center justify-between text-[0.92rem] font-semibold text-muted transition-colors duration-300 group-hover:text-forest-800">
                     {count} mẫu
                     <ArrowIcon width={18} height={18} />
                   </p>
