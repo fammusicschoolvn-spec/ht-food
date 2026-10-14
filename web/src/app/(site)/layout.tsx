@@ -4,11 +4,11 @@ import { PhoneIcon } from "@/components/icons";
 import { DealCard } from "@/components/deal-card";
 import { SiteHeader } from "@/components/site-header";
 import { childrenOf, topLevel } from "@/lib/categories";
-import { getCatalog } from "@/lib/data";
+import { getSite } from "@/lib/data";
 import { mapLink, safeUrl, telHref } from "@/lib/format";
 
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
-  const { categories, content } = await getCatalog();
+  const { categories, content } = await getSite();
   const { shop } = content;
   const zalo = safeUrl(shop.zalo);
   const zaloGroup = safeUrl(shop.zaloGroup);

@@ -15,7 +15,20 @@ import {
 } from "./auth";
 import { CATALOG_TAG } from "./data";
 import { safeUrl, slugify } from "./format";
-import { dropCategory, dropProduct, patchProduct, putCategory, putContent, putProduct, readDb, removeUploads } from "./store";
+import {
+  dropCategory,
+  dropProduct,
+  patchProduct,
+  productStats,
+  putCategory,
+  putContent,
+  putProduct,
+  readCategories,
+  readContent,
+  readProduct,
+  removeUploads,
+  slugTaken,
+} from "./store";
 
 export type FormState = { error?: string; ok?: string };
 
@@ -87,8 +100,8 @@ export async function saveProduct(_: FormState, fd: FormData): Promise<FormState
   if (!name) return { error: "Vui lòng nhập tên sản phẩm." };
   if (!priceLabel) return { error: "Vui lòng nhập giá hiển thị." };
 
-  const db = await readDb();
-  if (!db.categories.some((c) => c.id === categoryId)) return { error: "Vui lòng chọn danh mục." };
+  const [categories, existing] = await Promise.all([readCategories(), id ? readProduct(id) : Promise.resolve(null)]);
+  if (!categories.some((c) => c.id === categoryId)) return { error: "Vui lòng chọn danh mục." };
   const fields = {
     name,
     categoryId,
@@ -99,16 +112,16 @@ export async function saveProduct(_: FormState, fd: FormData): Promise<FormState
     featured: fd.get("featured") === "on",
     visible: fd.get("visible") === "on",
   };
-  const existing = db.products.find((p) => p.id === id);
   if (existing) {
     const thumb = existing.images[0] === images[0] ? existing.thumb : undefined;
     await putProduct({ ...existing, ...fields, thumb });
-    const after = { ...db, products: db.products.map((p) => (p.id === id ? { ...p, ...fields } : p)) };
-    await removeUploads(existing.images.filter((u) => !images.includes(u)), after);
+    await removeUploads(existing.images.filter((u) => !images.includes(u)));
   } else {
+    let slug = slugify(name) || "san-pham";
+    for (let i = 2; await slugTaken(slug); i++) slug = `${slugify(name) || "san-pham"}-${i}`;
     await putProduct({
       id: randomUUID(),
-      slug: uniqueSlug(slugify(name), db.products.map((p) => p.slug)),
+      slug,
       createdAt: new Date().toISOString(),
       ...fields,
     });
@@ -121,11 +134,10 @@ export async function saveProduct(_: FormState, fd: FormData): Promise<FormState
 export async function deleteProduct(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = text(fd, "id", 80);
-  const db = await readDb();
-  const gone = db.products.find((p) => p.id === id);
+  const gone = await readProduct(id);
   if (gone) {
     await dropProduct(id);
-    await removeUploads(gone.images, { ...db, products: db.products.filter((p) => p.id !== id) });
+    await removeUploads(gone.images);
   }
   updateTag(CATALOG_TAG);
   redirect("/admin/san-pham");
@@ -136,7 +148,7 @@ export async function toggleProduct(fd: FormData): Promise<void> {
   const id = text(fd, "id", 80);
   const field = text(fd, "field", 20);
   if (field !== "visible" && field !== "featured") return;
-  const p = (await readDb()).products.find((x) => x.id === id);
+  const p = await readProduct(id);
   if (p) await patchProduct(id, { [field]: !p[field] });
   updateTag(CATALOG_TAG);
 }
@@ -153,24 +165,22 @@ export async function saveCategory(_: FormState, fd: FormData): Promise<FormStat
   const image = isImageUrl(rawImage) ? rawImage : "";
   if (!name) return { error: "Vui lòng nhập tên danh mục." };
 
-  const db = await readDb();
-  const existing = db.categories.find((c) => c.id === id);
-  const parent = parentId ? db.categories.find((c) => c.id === parentId) : null;
+  const categories = await readCategories();
+  const existing = categories.find((c) => c.id === id);
+  const parent = parentId ? categories.find((c) => c.id === parentId) : null;
   // Chỉ có hai cấp: nhóm cha phải là nhóm lớn, và nhóm đang có con thì không thể thành con.
   let error: string | null = null;
   if (parentId && (!parent || parent.parentId || parent.id === id)) error = "Nhóm đã chọn không hợp lệ.";
-  else if (parentId && existing && db.categories.some((c) => c.parentId === existing.id)) {
+  else if (parentId && existing && categories.some((c) => c.parentId === existing.id)) {
     error = "Danh mục này đang có danh mục con nên phải là nhóm lớn.";
   } else if (existing) {
     await putCategory({ ...existing, name, description, parentId, image });
     const oldImage = existing.image ?? "";
-    if (oldImage && oldImage !== image) {
-      await removeUploads([oldImage], { ...db, categories: db.categories.map((c) => (c.id === id ? { ...c, image } : c)) });
-    }
+    if (oldImage && oldImage !== image) await removeUploads([oldImage]);
   } else {
     await putCategory({
       id: randomUUID(),
-      slug: uniqueSlug(slugify(name), db.categories.map((c) => c.slug)),
+      slug: uniqueSlug(slugify(name), categories.map((c) => c.slug)),
       name,
       description,
       parentId,
@@ -185,16 +195,16 @@ export async function saveCategory(_: FormState, fd: FormData): Promise<FormStat
 export async function deleteCategory(_: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
   const id = text(fd, "id", 80);
-  const db = await readDb();
-  const kids = db.categories.filter((c) => c.parentId === id).length;
-  const count = db.products.filter((p) => p.categoryId === id).length;
+  const [categories, stats] = await Promise.all([readCategories(), productStats()]);
+  const kids = categories.filter((c) => c.parentId === id).length;
+  const count = stats.byCategory[id]?.all ?? 0;
   let error: string | null = null;
   if (kids > 0) error = `Nhóm còn ${kids} danh mục con. Hãy xóa hoặc chuyển danh mục con trước.`;
   else if (count > 0) error = `Danh mục còn ${count} sản phẩm. Hãy chuyển hoặc xóa sản phẩm trước.`;
   else {
-    const gone = db.categories.find((c) => c.id === id);
+    const gone = categories.find((c) => c.id === id);
     await dropCategory(id);
-    if (gone?.image) await removeUploads([gone.image], { ...db, categories: db.categories.filter((c) => c.id !== id) });
+    if (gone?.image) await removeUploads([gone.image]);
   }
   if (error) return { error };
   updateTag(CATALOG_TAG);
@@ -222,8 +232,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
     return isImageUrl(v) ? v : fallback;
   };
 
-  const db = await readDb();
-  const old = db.content;
+  const old = await readContent();
   const content = {
     shop: {
       name: text(fd, "shopName", 60) || old.shop.name,
@@ -260,7 +269,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
     },
   };
   await putContent(content);
-  await removeUploads([old.hero.image, old.hero.imageSmall], { ...db, content });
+  await removeUploads([old.hero.image, old.hero.imageSmall]);
   updateTag(CATALOG_TAG);
   return { ok: "Đã lưu. Trang khách xem đã cập nhật." };
 }
@@ -268,7 +277,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
 /* ---------- Làm mới ---------- */
 
 /** Dữ liệu sửa ngoài trang quản trị (nhập file Excel, tạo ảnh thu nhỏ) cần bấm làm mới để trang khách thấy ngay. */
-export async function refreshCatalog(_: FormState): Promise<FormState> {
+export async function refreshCatalog(): Promise<FormState> {
   await requireAdmin();
   updateTag(CATALOG_TAG);
   return { ok: "Đã làm mới. Trang khách đang hiện dữ liệu mới nhất." };

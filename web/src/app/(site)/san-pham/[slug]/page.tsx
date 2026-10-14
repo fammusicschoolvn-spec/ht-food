@@ -8,20 +8,18 @@ import { BoxIcon, PinIcon } from "@/components/icons";
 import { PriceTag } from "@/components/price-tag";
 import { ProductGrid } from "@/components/product-card";
 import { parentOf } from "@/lib/categories";
-import { getCatalog } from "@/lib/data";
+import { getProduct, getRelated, getShowcase, getSite } from "@/lib/data";
 
 type Props = PageProps<"/san-pham/[slug]">;
 
 export async function generateStaticParams() {
-  const { products } = await getCatalog();
   // Dựng sẵn các mẫu nổi bật; trang còn lại dựng khi có người mở lần đầu rồi lưu lại.
-  return products.filter((p) => p.featured).map((p) => ({ slug: p.slug }));
+  return (await getShowcase()).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const { products } = await getCatalog();
-  const product = products.find((p) => p.slug === slug);
+  const product = await getProduct(slug);
   if (!product) return { title: "Không tìm thấy sản phẩm" };
   return {
     title: product.name,
@@ -32,17 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 async function Detail({ params }: Pick<Props, "params">) {
   const { slug } = await params;
-  const { products, categories, content } = await getCatalog();
-  const product = products.find((p) => p.slug === slug);
+  const [product, { categories, content }] = await Promise.all([getProduct(slug), getSite()]);
   if (!product) notFound();
 
   const category = categories.find((c) => c.id === product.categoryId);
   const group = category && parentOf(categories, category);
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name;
-  const related = products
-    .filter((p) => p.id !== product.id && p.categoryId === product.categoryId)
-    .sort((a, b) => Math.abs(a.priceMin - product.priceMin) - Math.abs(b.priceMin - product.priceMin))
-    .slice(0, 4);
+  const related = await getRelated(product);
 
   return (
     <>

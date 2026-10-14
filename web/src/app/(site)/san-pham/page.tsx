@@ -5,8 +5,7 @@ import { ContactButtons } from "@/components/contact-buttons";
 import { Pager } from "@/components/pager";
 import { ProductGrid } from "@/components/product-card";
 import { childrenOf, familyIds, parentOf, topLevel } from "@/lib/categories";
-import { getCatalog, inTier, PRICE_TIERS } from "@/lib/data";
-import { slugify } from "@/lib/format";
+import { getCounts, getListing, getSite, PRICE_TIERS } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Sản phẩm",
@@ -31,30 +30,22 @@ function href(dm: string, gia: string, tim = "", trang = 1) {
 
 async function Listing({ searchParams }: { searchParams: Search }) {
   const sp = await searchParams;
-  const { products, categories, content } = await getCatalog();
+  const [{ categories, content }, counts] = await Promise.all([getSite(), getCounts()]);
   const category = categories.find((c) => c.slug === one(sp.dm));
   const tier = PRICE_TIERS.find((t) => t.id === one(sp.gia));
   const dm = category?.slug ?? "";
   const gia = tier?.id ?? "";
-
   const tim = one(sp.q).trim().slice(0, 60);
-  // So khớp không dấu: gõ "gio hoa" vẫn ra "Giỏ hoa".
-  const needle = slugify(tim);
   // Chọn nhóm lớn thì gồm cả sản phẩm của các danh mục con.
   const ids = category ? familyIds(categories, category) : [];
   const group = category ? (parentOf(categories, category) ?? category) : undefined;
   const subs = group ? childrenOf(categories, group.id) : [];
-  const list = products.filter(
-    (p) =>
-      (!category || ids.includes(p.categoryId)) &&
-      inTier(p, gia) &&
-      (!needle || slugify(`${p.name} ${p.description}`).includes(needle)),
-  );
+  const page = Math.max(1, Math.floor(Number(one(sp.trang)) || 1));
+  // Tìm không dấu: gõ "gio hoa" vẫn ra "Giỏ hoa".
+  const { items: shown, total } = await getListing({ categoryIds: ids, tierId: gia, q: tim, page, perPage: PER_PAGE });
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name;
-  const emptyCategory = category && !products.some((p) => ids.includes(p.categoryId));
-  const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
-  const page = Math.min(pages, Math.max(1, Math.floor(Number(one(sp.trang)) || 1)));
-  const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const emptyCategory = category && !ids.some((id) => counts.byCategory[id]);
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
 
   return (
     <>
@@ -126,7 +117,7 @@ async function Listing({ searchParams }: { searchParams: Search }) {
         </div>
 
         <p className="mt-8 text-sm text-muted" role="status">
-          {list.length} sản phẩm{pages > 1 && ` · trang ${page}/${pages}`}
+          {total.toLocaleString("vi-VN")} sản phẩm{pages > 1 && ` · trang ${page}/${pages}`}
           {tim && (
             <>
               {" · "}
@@ -137,7 +128,7 @@ async function Listing({ searchParams }: { searchParams: Search }) {
           )}
         </p>
 
-        {list.length > 0 ? (
+        {total > 0 ? (
           <div className="mt-6">
             <ProductGrid products={shown} categoryName={categoryName} />
             <Pager page={page} pages={pages} href={(n) => href(dm, gia, tim, n)} />

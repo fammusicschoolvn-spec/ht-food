@@ -1,20 +1,20 @@
 import Link from "next/link";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { requireAdmin } from "@/lib/auth";
-import { readDb } from "@/lib/store";
+import { productStats, readCategories, readContent } from "@/lib/store";
 
 export default async function AdminHome() {
   await requireAdmin();
-  const { products, categories, content } = await readDb();
+  const [ps, categories, content] = await Promise.all([productStats(), readCategories(), readContent()]);
 
   const stats = [
-    { label: "Sản phẩm", value: products.length },
-    { label: "Đang hiện", value: products.filter((p) => p.visible).length },
-    { label: "Mẫu nổi bật", value: products.filter((p) => p.featured).length },
+    { label: "Sản phẩm", value: ps.total },
+    { label: "Đang hiện", value: ps.visible },
+    { label: "Mẫu nổi bật", value: ps.featured },
     { label: "Danh mục", value: categories.length },
   ];
 
-  const emptyCategories = categories.filter((c) => c.parentId && !products.some((p) => p.categoryId === c.id && p.visible));
+  const emptyCategories = categories.filter((c) => c.parentId && !ps.byCategory[c.id]?.visible);
   const todo = [
     !content.shop.facebook && { text: "Chưa có đường dẫn Facebook.", href: "/admin/noi-dung" },
     !content.shop.messenger && { text: "Chưa có đường dẫn Messenger.", href: "/admin/noi-dung" },
@@ -38,7 +38,7 @@ export default async function AdminHome() {
         {stats.map((s) => (
           <div key={s.label} className="a-card">
             <dt className="text-sm font-medium text-muted">{s.label}</dt>
-            <dd className="mt-2 font-display text-[2.4rem] leading-none text-forest-800">{s.value}</dd>
+            <dd className="mt-2 font-display text-[2.4rem] leading-none text-forest-800">{s.value.toLocaleString("vi-VN")}</dd>
           </div>
         ))}
       </dl>

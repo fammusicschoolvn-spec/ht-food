@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ContactButtons } from "@/components/contact-buttons";
 import { ClockIcon, PhoneIcon, PinIcon } from "@/components/icons";
-import { getCatalog } from "@/lib/data";
+import { getSite } from "@/lib/data";
 import { mapEmbed, mapLink } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const { content } = await getCatalog();
+  const { content } = await getSite();
   const { shop, steps } = content;
 
   return (

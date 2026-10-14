@@ -5,7 +5,7 @@ import { ArrowIcon, BoxIcon, ClockIcon, LeafIcon, PhoneIcon, PinIcon } from "@/c
 import { ProductGrid } from "@/components/product-card";
 import { SectionTitle } from "@/components/section-title";
 import { familyIds, topLevel } from "@/lib/categories";
-import { getCatalog, inTier, PRICE_TIERS } from "@/lib/data";
+import { getCounts, getGroupCover, getShowcase, getSite, PRICE_TIERS } from "@/lib/data";
 import { mapEmbed, mapLink } from "@/lib/format";
 
 // Các lát trái cây bay trong ô mức giá: mỗi lát một làn, tốc độ và chiều khác nhau cho tự nhiên.
@@ -23,13 +23,14 @@ const FLYERS = [
 ] as const;
 
 export default async function HomePage() {
-  const { products, categories, content } = await getCatalog();
+  const [{ categories, content }, counts, showcase] = await Promise.all([getSite(), getCounts(), getShowcase()]);
   const { shop, hero, about, steps } = content;
   const groups = topLevel(categories);
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name;
-
-  const featured = products.filter((p) => p.featured).slice(0, 8);
-  const showcase = featured.length >= 4 ? featured : products.slice(0, 8);
+  const groupCount = (g: (typeof groups)[number]) => familyIds(categories, g).reduce((n, id) => n + (counts.byCategory[id] ?? 0), 0);
+  // Nhóm chưa có ảnh đại diện thì lấy ảnh một món trong nhóm.
+  const homeGroups = groups.filter((g) => g.slug !== "hang-khac");
+  const covers = await Promise.all(homeGroups.map((g) => (g.image ? g.image : getGroupCover(familyIds(categories, g)))));
 
   // Tách tiêu đề ở dấu phẩy đầu tiên: vế sau in nghiêng màu vàng.
   const comma = hero.title.indexOf(",");
@@ -100,16 +101,15 @@ export default async function HomePage() {
         <SectionTitle eyebrow="Danh mục" title="Danh mục sản phẩm" />
         <ul className="mt-12 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-6">
           {/* "Hàng khác" chỉ để trong menu, không đưa ra trang chủ. */}
-          {groups.filter((g) => g.slug !== "hang-khac").map((g) => {
-            const ids = familyIds(categories, g);
-            const items = products.filter((p) => ids.includes(p.categoryId));
-            const cover = g.image || items[0]?.images[0];
+          {homeGroups.map((g, i) => {
+            const count = groupCount(g);
+            const cover = covers[i];
             return (
               <li key={g.id}>
                 <Link href={`/san-pham?dm=${g.slug}`} className="group flex flex-col items-center text-center">
                   <span className="relative block size-32 overflow-hidden rounded-full bg-sage ring-1 ring-line transition-shadow duration-300 group-hover:ring-4 group-hover:ring-forest-600/30">
                     {cover ? (
-                      <Image src={cover} alt="" fill sizes="128px" className={`object-cover ${g.image ? "" : "object-bottom"}`} />
+                      <Image src={cover} alt="" fill sizes="128px" unoptimized={cover.startsWith("http")} className={`object-cover ${g.image ? "" : "object-bottom"}`} />
                     ) : (
                       <span className="flex size-full items-center justify-center text-forest-600">
                         <LeafIcon width={38} height={38} />
@@ -120,7 +120,7 @@ export default async function HomePage() {
                   <h3 className="mt-5 flex min-h-[2.7em] items-center font-display text-[0.9rem] font-bold uppercase leading-[1.35] tracking-[0.04em] text-balance transition-colors duration-200 group-hover:text-forest-600">
                     {g.name}
                   </h3>
-                  <p className="mt-1 text-[0.85rem] text-muted">{items.length > 0 ? `${items.length} sản phẩm` : "Đang cập nhật"}</p>
+                  <p className="mt-1 text-[0.85rem] text-muted">{count > 0 ? `${count.toLocaleString("vi-VN")} sản phẩm` : "Đang cập nhật"}</p>
                 </Link>
               </li>
             );
@@ -137,7 +137,7 @@ export default async function HomePage() {
               Tất cả
             </Link>
             {groups
-              .filter((g) => products.some((x) => familyIds(categories, g).includes(x.categoryId)))
+              .filter((g) => groupCount(g) > 0)
               .map((c) => (
               <Link
                 key={c.id}
@@ -153,7 +153,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-12 flex justify-center">
             <Link href="/san-pham" className="btn btn-line">
-              Xem tất cả {products.length.toLocaleString("vi-VN")} sản phẩm
+              Xem tất cả {counts.total.toLocaleString("vi-VN")} sản phẩm
               <ArrowIcon width={18} height={18} />
             </Link>
           </div>
@@ -193,7 +193,7 @@ export default async function HomePage() {
         <SectionTitle eyebrow="Chọn theo ngân sách" title="Mức giá nào cũng có mẫu đẹp" />
         <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PRICE_TIERS.map((tier) => {
-            const count = products.filter((p) => inTier(p, tier.id)).length;
+            const count = counts.byTier[tier.id] ?? 0;
             return (
               <li key={tier.id}>
                 <Link

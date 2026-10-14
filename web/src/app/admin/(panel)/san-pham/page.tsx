@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Pager } from "@/components/pager";
 import { ProductImage } from "@/components/product-image";
-import { toggleProduct } from "@/lib/actions";
 import { requireAdmin } from "@/lib/auth";
 import { familyIds, fullName, topLevel, childrenOf } from "@/lib/categories";
-import { slugify } from "@/lib/format";
-import { readDb } from "@/lib/store";
+import { adminProducts, productStats, readCategories } from "@/lib/store";
+import { ToggleButton } from "@/components/admin/toggle-button";
 
 export const metadata: Metadata = { title: "Sản phẩm" };
 
@@ -20,51 +19,25 @@ const FILTERS = [
   { id: "noi-bat", label: "Nổi bật" },
 ] as const;
 
-function Toggle({ id, field, on, onText, offText }: { id: string; field: string; on: boolean; onText: string; offText: string }) {
-  return (
-    <form action={toggleProduct}>
-      <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="field" value={field} />
-      <button
-        type="submit"
-        aria-pressed={on}
-        className={`a-btn min-h-9 px-3 text-xs ${on ? "bg-sage text-forest-800 hover:bg-forest-800 hover:text-white" : "a-btn-ghost text-muted"}`}
-      >
-        {on ? onText : offText}
-      </button>
-    </form>
-  );
-}
-
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 export default async function AdminProducts({ searchParams }: PageProps<"/admin/san-pham">) {
   await requireAdmin();
   const sp = await searchParams;
-  const { products, categories } = await readDb();
-
   const q = one(sp.q).trim().slice(0, 80);
   const dm = one(sp.dm);
   const loc = FILTERS.some((f) => f.id === one(sp.loc)) ? one(sp.loc) : "";
+  const page = Math.max(1, Math.floor(Number(one(sp.trang)) || 1));
+  const [categories, stats] = await Promise.all([readCategories(), productStats()]);
   const category = categories.find((c) => c.id === dm);
-  const ids = category ? familyIds(categories, category) : [];
-  const needle = slugify(q);
-
-  const list = [...products]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .filter(
-      (p) =>
-        (!category || ids.includes(p.categoryId)) &&
-        (!needle || slugify(`${p.name} ${p.code ?? ""}`).includes(needle)) &&
-        (loc === "" ||
-          (loc === "hien" && p.visible) ||
-          (loc === "an" && !p.visible) ||
-          (loc === "thieu-anh" && p.images.length === 0) ||
-          (loc === "noi-bat" && p.featured)),
-    );
-  const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
-  const page = Math.min(pages, Math.max(1, Math.floor(Number(one(sp.trang)) || 1)));
-  const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const { items: shown, total } = await adminProducts({
+    q,
+    categoryIds: category ? familyIds(categories, category) : [],
+    loc,
+    page,
+    perPage: PER_PAGE,
+  });
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
 
   const href = (patch: Record<string, string | number>) => {
     const params = new URLSearchParams();
@@ -84,7 +57,7 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
         <div>
           <h1 className="font-display text-[2.2rem] leading-tight">Sản phẩm</h1>
           <p className="mt-1 text-sm text-muted">
-            {products.length.toLocaleString("vi-VN")} sản phẩm, {products.filter((p) => p.visible).length.toLocaleString("vi-VN")} đang hiện trên web.
+            {stats.total.toLocaleString("vi-VN")} sản phẩm, {stats.visible.toLocaleString("vi-VN")} đang hiện trên web.
           </p>
         </div>
         <Link href="/admin/san-pham/moi" className="a-btn a-btn-primary">
@@ -137,7 +110,7 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
       </nav>
 
       <p className="text-sm text-muted" role="status">
-        {list.length.toLocaleString("vi-VN")} sản phẩm khớp{pages > 1 && ` · trang ${page}/${pages}`}
+        {total.toLocaleString("vi-VN")} sản phẩm khớp{pages > 1 && ` · trang ${page}/${pages}`}
       </p>
 
       <ul className="space-y-3">
@@ -154,8 +127,8 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Toggle id={p.id} field="visible" on={p.visible} onText="Đang hiện" offText="Đang ẩn" />
-              <Toggle id={p.id} field="featured" on={p.featured} onText="Nổi bật" offText="Thường" />
+              <ToggleButton id={p.id} field="visible" on={p.visible} onText="Đang hiện" offText="Đang ẩn" />
+              <ToggleButton id={p.id} field="featured" on={p.featured} onText="Nổi bật" offText="Thường" />
               <Link href={`/admin/san-pham/${p.id}`} className="a-btn a-btn-ghost min-h-9 px-3 text-xs">
                 Sửa
               </Link>

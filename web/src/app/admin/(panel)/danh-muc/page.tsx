@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import { CategoryForm } from "@/components/admin/category-forms";
 import { requireAdmin } from "@/lib/auth";
 import { childrenOf, topLevel } from "@/lib/categories";
-import { readDb } from "@/lib/store";
+import { productStats, readCategories } from "@/lib/store";
 import type { Category } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Danh mục" };
 
 export default async function AdminCategories() {
   await requireAdmin();
-  const { categories, products } = await readDb();
+  const [categories, stats] = await Promise.all([readCategories(), productStats()]);
   const groups = topLevel(categories);
-  const count = (id: string) => products.filter((p) => p.categoryId === id).length;
+  const count = (id: string) => stats.byCategory[id]?.all ?? 0;
 
   const row = (c: Category, kids: number) => (
     <details key={c.id} className="group border-t border-line first:border-0">

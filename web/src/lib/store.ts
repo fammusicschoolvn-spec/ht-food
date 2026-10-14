@@ -1,6 +1,7 @@
 import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { slugify } from "./format";
 import { defaultContent, seed } from "./seed";
 import type { Category, Content, Db, Product } from "./types";
 
@@ -52,6 +53,7 @@ type ProductRow = {
   code: string | null;
   stock: number | null;
   thumb?: string | null;
+  search?: string;
 };
 
 type CategoryRow = {
@@ -63,6 +65,9 @@ type CategoryRow = {
   image: string;
   sort: number;
 };
+
+/** Tên + mã hàng viết không dấu, để tìm kiếm trong trang quản trị. */
+const searchText = (p: Pick<Product, "name" | "code">) => slugify(`${p.name} ${p.code ?? ""}`);
 
 const toProduct = (r: ProductRow): Product => ({
   id: r.id,
@@ -96,6 +101,7 @@ const fromProduct = (p: Product): ProductRow => ({
   code: p.code ?? null,
   stock: p.stock ?? null,
   thumb: p.thumb ?? "",
+  search: searchText(p),
 });
 
 const toCategory = (r: CategoryRow): Category => ({
@@ -124,10 +130,10 @@ async function sb(pathname: string, init: RequestInit & { headers?: Record<strin
 }
 
 /** Đọc hết một bảng theo từng trang 1000 dòng (giới hạn mặc định của Supabase). */
-async function sbAll<T>(table: string, order: string): Promise<T[]> {
+async function sbAll<T>(table: string, order: string, select = "*", filter = ""): Promise<T[]> {
   const out: T[] = [];
   for (let from = 0; ; from += 1000) {
-    const res = await sb(`/rest/v1/${table}?select=*&order=${order}`, { headers: { Range: `${from}-${from + 999}` } });
+    const res = await sb(`/rest/v1/${table}?select=${select}&order=${order}${filter}`, { headers: { Range: `${from}-${from + 999}` } });
     const page = (await res.json()) as T[];
     out.push(...page);
     if (page.length < 1000) return out;
@@ -190,6 +196,126 @@ export async function readDb(): Promise<Db> {
     categories: categories.map(toCategory),
     products: products.map(toProduct),
     content: withDefaults(content[0]?.data),
+  };
+}
+
+/* ---------- Đọc gọn cho trang quản trị ---------- */
+
+export async function readCategories(): Promise<Category[]> {
+  if (!usingSupabase) return (await readFileDb()).categories;
+  return (await sbAll<CategoryRow>("categories", "sort.asc")).map(toCategory);
+}
+
+export async function readContent(): Promise<Content> {
+  if (!usingSupabase) return (await readFileDb()).content;
+  const rows = (await (await sb("/rest/v1/site_content?select=data&id=eq.1")).json()) as { data: Partial<Content> }[];
+  return withDefaults(rows[0]?.data);
+}
+
+export async function readProduct(id: string): Promise<Product | null> {
+  if (!usingSupabase) return (await readFileDb()).products.find((p) => p.id === id) ?? null;
+  const rows = (await (await sb(`/rest/v1/products?select=*&id=eq.${encodeURIComponent(id)}`)).json()) as ProductRow[];
+  return rows[0] ? toProduct(rows[0]) : null;
+}
+
+export async function slugTaken(slug: string): Promise<boolean> {
+  if (!usingSupabase) return (await readFileDb()).products.some((p) => p.slug === slug);
+  const rows = (await (await sb(`/rest/v1/products?select=id&slug=eq.${encodeURIComponent(slug)}`)).json()) as unknown[];
+  return rows.length > 0;
+}
+
+export type ProductFilter = {
+  q?: string;
+  categoryIds?: string[];
+  /** Trạng thái trong quản trị: "", "hien", "an", "thieu-anh", "noi-bat". */
+  loc?: string;
+  visibleOnly?: boolean;
+  featuredOnly?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
+  page: number;
+  perPage: number;
+};
+
+/** Một trang sản phẩm theo bộ lọc, mới nhất trước. Lọc ngay trên Supabase nên chỉ tải đúng số món cần hiện. */
+export async function queryProducts(f: ProductFilter): Promise<{ items: Product[]; total: number }> {
+  const words = slugify(f.q ?? "").split("-").filter(Boolean).slice(0, 6);
+  const cats = f.categoryIds ?? [];
+  const loc = f.loc ?? "";
+  if (!usingSupabase) {
+    const list = (await readFileDb()).products
+      .filter(
+        (p) =>
+          (cats.length === 0 || cats.includes(p.categoryId)) &&
+          words.every((w) => searchText(p).includes(w)) &&
+          (!f.visibleOnly || p.visible) &&
+          (!f.featuredOnly || p.featured) &&
+          (f.minPrice == null || p.priceMin >= f.minPrice) &&
+          (f.maxPrice == null || p.priceMin < f.maxPrice) &&
+          (loc === "" ||
+            (loc === "hien" && p.visible) ||
+            (loc === "an" && !p.visible) ||
+            (loc === "thieu-anh" && p.images.length === 0) ||
+            (loc === "noi-bat" && p.featured)),
+      )
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return { items: list.slice((f.page - 1) * f.perPage, f.page * f.perPage), total: list.length };
+  }
+  const q = new URLSearchParams({ select: "*", order: "created_at.desc" });
+  const and: string[] = words.map((w) => `search.ilike.*${w}*`);
+  if (f.minPrice != null) and.push(`price_min.gte.${f.minPrice}`);
+  if (f.maxPrice != null && Number.isFinite(f.maxPrice)) and.push(`price_min.lt.${f.maxPrice}`);
+  if (and.length) q.set("and", `(${and.join(",")})`);
+  if (cats.length) q.set("category_id", `in.(${cats.map((c) => `"${c}"`).join(",")})`);
+  if (f.visibleOnly || loc === "hien") q.set("visible", "is.true");
+  if (loc === "an") q.set("visible", "is.false");
+  if (f.featuredOnly || loc === "noi-bat") q.set("featured", "is.true");
+  if (loc === "thieu-anh") q.set("images", "eq.[]");
+  const from = (f.page - 1) * f.perPage;
+  const res = await sb(`/rest/v1/products?${q}`, { headers: { Range: `${from}-${from + f.perPage - 1}`, Prefer: "count=exact" } });
+  const total = Number(res.headers.get("content-range")?.split("/")[1] ?? 0);
+  return { items: ((await res.json()) as ProductRow[]).map(toProduct), total };
+}
+
+export const adminProducts = queryProducts;
+
+export async function productBySlug(slug: string): Promise<Product | null> {
+  if (!usingSupabase) return (await readFileDb()).products.find((p) => p.slug === slug) ?? null;
+  const rows = (await (await sb(`/rest/v1/products?select=*&slug=eq.${encodeURIComponent(slug)}`)).json()) as ProductRow[];
+  return rows[0] ? toProduct(rows[0]) : null;
+}
+
+/** Danh mục và giá của các món đang hiện: đủ để đếm số món theo danh mục, theo mức giá. */
+export async function visibleIndex(): Promise<{ categoryId: string; priceMin: number }[]> {
+  if (!usingSupabase) {
+    return (await readFileDb()).products.filter((p) => p.visible).map((p) => ({ categoryId: p.categoryId, priceMin: p.priceMin }));
+  }
+  const rows = await sbAll<{ category_id: string; price_min: number }>("products", "id", "category_id,price_min", "&visible=is.true");
+  return rows.map((r) => ({ categoryId: r.category_id, priceMin: Number(r.price_min) || 0 }));
+}
+
+/** Số sản phẩm (tất cả và đang hiện) theo từng danh mục, cùng các con số tổng. */
+export async function productStats(): Promise<{
+  total: number;
+  visible: number;
+  featured: number;
+  byCategory: Record<string, { all: number; visible: number }>;
+}> {
+  type Light = { category_id: string; visible: boolean; featured: boolean };
+  const rows: Light[] = usingSupabase
+    ? await sbAll<Light>("products", "id", "category_id,visible,featured")
+    : (await readFileDb()).products.map((p) => ({ category_id: p.categoryId, visible: p.visible, featured: p.featured }));
+  const byCategory: Record<string, { all: number; visible: number }> = {};
+  for (const r of rows) {
+    const c = (byCategory[r.category_id] ??= { all: 0, visible: 0 });
+    c.all += 1;
+    if (r.visible) c.visible += 1;
+  }
+  return {
+    total: rows.length,
+    visible: rows.filter((r) => r.visible).length,
+    featured: rows.filter((r) => r.featured).length,
+    byCategory,
   };
 }
 
@@ -303,17 +429,31 @@ function uploadName(url: string): string {
   return UPLOAD_NAME.test(name) ? name : "";
 }
 
-/** Xóa các ảnh tải lên không còn sản phẩm, danh mục hay nội dung nào dùng. */
-export async function removeUploads(urls: string[], db: Db): Promise<void> {
-  const used = new Set([
-    ...db.products.flatMap((p) => p.images),
-    ...db.categories.map((c) => c.image ?? ""),
-    db.content.hero.image,
-    db.content.hero.imageSmall,
-  ]);
+/** Ảnh còn được sản phẩm, danh mục hay nội dung trang dùng không. */
+async function uploadUsed(url: string): Promise<boolean> {
+  if (!usingSupabase) {
+    const db = await readFileDb();
+    return (
+      db.products.some((p) => p.images.includes(url) || p.thumb === url) ||
+      db.categories.some((c) => c.image === url) ||
+      [db.content.hero.image, db.content.hero.imageSmall].includes(url)
+    );
+  }
+  const hit = async (path: string) => ((await (await sb(path)).json()) as unknown[]).length > 0;
+  const enc = encodeURIComponent;
+  const content = await readContent();
+  return (
+    [content.hero.image, content.hero.imageSmall].includes(url) ||
+    (await hit(`/rest/v1/products?select=id&limit=1&images=cs.${enc(JSON.stringify([url]))}`)) ||
+    (await hit(`/rest/v1/categories?select=id&limit=1&image=eq.${enc(url)}`))
+  );
+}
+
+/** Xóa các ảnh tải lên không còn sản phẩm, danh mục hay nội dung nào dùng. Gọi SAU khi đã lưu thay đổi. */
+export async function removeUploads(urls: string[]): Promise<void> {
   for (const url of urls) {
     const name = uploadName(url);
-    if (!name || used.has(url)) continue;
+    if (!name || (await uploadUsed(url))) continue;
     if (usingSupabase) await sb(`/storage/v1/object/${BUCKET}/${name}`, { method: "DELETE" }).catch(() => undefined);
     else await fs.rm(path.join(/* turbopackIgnore: true */ UPLOAD_DIR, name), { force: true });
   }

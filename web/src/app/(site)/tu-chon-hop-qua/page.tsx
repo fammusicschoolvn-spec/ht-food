@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BasketBuilder } from "@/components/basket-builder";
 import { parseBaskets, parseFruits } from "@/lib/builder";
-import { getCatalog } from "@/lib/data";
+import { getProduct, getSite } from "@/lib/data";
 import { safeUrl, telHref } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ type Props = PageProps<"/tu-chon-hop-qua">;
 /** `?mau=<slug>`: khách bấm "tự xếp theo mẫu này" từ trang sản phẩm. */
 async function Builder({ searchParams }: Pick<Props, "searchParams">) {
   const { mau } = await searchParams;
-  const { products, content } = await getCatalog();
+  const { content } = await getSite();
   const slug = Array.isArray(mau) ? mau[0] : mau;
   const baskets = parseBaskets(content.box.baskets);
   const fruits = parseFruits(content.box.fruits);
@@ -27,7 +27,7 @@ async function Builder({ searchParams }: Pick<Props, "searchParams">) {
       baskets={baskets}
       fruits={fruits}
       priceNote={content.box.priceNote}
-      reference={products.find((p) => p.slug === slug)?.name ?? ""}
+      reference={slug ? ((await getProduct(slug))?.name ?? "") : ""}
       zalo={safeUrl(content.shop.zalo)}
       phone={content.shop.phone}
       phoneHref={telHref(content.shop.phone)}
@@ -36,7 +36,7 @@ async function Builder({ searchParams }: Pick<Props, "searchParams">) {
 }
 
 export default async function BoxPage({ searchParams }: Props) {
-  const { content } = await getCatalog();
+  const { content } = await getSite();
   return (
     <>
       <header className="border-b border-line bg-ivory/60">

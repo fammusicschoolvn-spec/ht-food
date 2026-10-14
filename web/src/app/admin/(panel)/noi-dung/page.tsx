@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { ContentForm } from "@/components/admin/content-form";
 import { requireAdmin } from "@/lib/auth";
-import { readDb } from "@/lib/store";
+import { readContent } from "@/lib/store";
 
 export const metadata: Metadata = { title: "Nội dung & liên hệ" };
 
 export default async function AdminContent() {
   await requireAdmin();
-  const { content } = await readDb();
+  const content = await readContent();
   return (
     <div className="space-y-6">
       <div>
