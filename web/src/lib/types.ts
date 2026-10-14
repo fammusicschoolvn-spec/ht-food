@@ -21,6 +21,8 @@ export type Product = {
   description: string;
   /** Ảnh đầu tiên là ảnh chính. */
   images: string[];
+  /** Bản thu nhỏ của ảnh chính, dùng ở danh sách; rỗng thì dùng ảnh chính. */
+  thumb?: string;
   featured: boolean;
   visible: boolean;
   createdAt: string;

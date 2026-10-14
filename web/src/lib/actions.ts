@@ -101,7 +101,8 @@ export async function saveProduct(_: FormState, fd: FormData): Promise<FormState
   };
   const existing = db.products.find((p) => p.id === id);
   if (existing) {
-    await putProduct({ ...existing, ...fields });
+    const thumb = existing.images[0] === images[0] ? existing.thumb : undefined;
+    await putProduct({ ...existing, ...fields, thumb });
     const after = { ...db, products: db.products.map((p) => (p.id === id ? { ...p, ...fields } : p)) };
     await removeUploads(existing.images.filter((u) => !images.includes(u)), after);
   } else {

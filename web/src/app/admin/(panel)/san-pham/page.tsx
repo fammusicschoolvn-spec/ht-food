@@ -144,7 +144,7 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
         {shown.map((p) => (
           <li key={p.id} className="a-card flex flex-wrap items-center gap-4 p-4 sm:p-4">
             <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-white">
-              <ProductImage src={p.images[0]} alt="" sizes="64px" className="object-contain" />
+              <ProductImage src={p.thumb || p.images[0]} alt="" sizes="64px" className="object-contain" />
             </div>
             <div className="min-w-0 flex-1 basis-48">
               <p className="truncate font-semibold">{p.name}</p>

@@ -51,6 +51,7 @@ type ProductRow = {
   created_at: string;
   code: string | null;
   stock: number | null;
+  thumb?: string | null;
 };
 
 type CategoryRow = {
@@ -77,6 +78,7 @@ const toProduct = (r: ProductRow): Product => ({
   createdAt: r.created_at,
   code: r.code ?? undefined,
   stock: r.stock == null ? undefined : Number(r.stock),
+  thumb: r.thumb || undefined,
 });
 
 const fromProduct = (p: Product): ProductRow => ({
@@ -93,6 +95,7 @@ const fromProduct = (p: Product): ProductRow => ({
   created_at: p.createdAt,
   code: p.code ?? null,
   stock: p.stock ?? null,
+  thumb: p.thumb ?? "",
 });
 
 const toCategory = (r: CategoryRow): Category => ({

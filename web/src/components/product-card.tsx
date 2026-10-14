@@ -11,12 +11,13 @@ export function ProductCard({
   category?: string;
   priority?: boolean;
 }) {
-  const remote = Boolean(product.images[0]?.startsWith("http"));
+  const src = product.thumb || product.images[0];
+  const remote = Boolean(src?.startsWith("http"));
   return (
     <Link href={`/san-pham/${product.slug}`} className="group block">
       <div className={`relative aspect-[4/5] overflow-hidden rounded-[22px] ${remote ? "bg-white" : "bg-ivory"}`}>
         <ProductImage
-          src={product.images[0]}
+          src={src}
           alt={product.name}
           priority={priority}
           sizes="(min-width: 1024px) 290px, (min-width: 640px) 33vw, 50vw"
