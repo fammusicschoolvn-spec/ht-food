@@ -294,6 +294,20 @@ export async function visibleIndex(): Promise<{ categoryId: string; priceMin: nu
   return rows.map((r) => ({ categoryId: r.category_id, priceMin: Number(r.price_min) || 0 }));
 }
 
+/** Tổng số sản phẩm và số đang hiện, đếm thẳng trên Supabase (không tải dữ liệu). */
+export async function productTotals(): Promise<{ total: number; visible: number }> {
+  if (!usingSupabase) {
+    const all = (await readFileDb()).products;
+    return { total: all.length, visible: all.filter((p) => p.visible).length };
+  }
+  const count = async (filter: string) => {
+    const res = await sb(`/rest/v1/products?select=id${filter}`, { method: "HEAD", headers: { Prefer: "count=exact", Range: "0-0" } });
+    return Number(res.headers.get("content-range")?.split("/")[1] ?? 0);
+  };
+  const [total, visible] = await Promise.all([count(""), count("&visible=is.true")]);
+  return { total, visible };
+}
+
 /** Số sản phẩm (tất cả và đang hiện) theo từng danh mục, cùng các con số tổng. */
 export async function productStats(): Promise<{
   total: number;

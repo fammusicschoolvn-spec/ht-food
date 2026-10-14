@@ -4,7 +4,7 @@ import { Pager } from "@/components/pager";
 import { ProductImage } from "@/components/product-image";
 import { requireAdmin } from "@/lib/auth";
 import { familyIds, fullName, topLevel, childrenOf } from "@/lib/categories";
-import { adminProducts, productStats, readCategories } from "@/lib/store";
+import { adminProducts, productTotals, readCategories } from "@/lib/store";
 import { ToggleButton } from "@/components/admin/toggle-button";
 
 export const metadata: Metadata = { title: "Sản phẩm" };
@@ -28,7 +28,7 @@ export default async function AdminProducts({ searchParams }: PageProps<"/admin/
   const dm = one(sp.dm);
   const loc = FILTERS.some((f) => f.id === one(sp.loc)) ? one(sp.loc) : "";
   const page = Math.max(1, Math.floor(Number(one(sp.trang)) || 1));
-  const [categories, stats] = await Promise.all([readCategories(), productStats()]);
+  const [categories, stats] = await Promise.all([readCategories(), productTotals()]);
   const category = categories.find((c) => c.id === dm);
   const { items: shown, total } = await adminProducts({
     q,
