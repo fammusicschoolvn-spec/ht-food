@@ -311,7 +311,8 @@ def convert(path: str):
         slugs.add(slug)
         supply = bool(re.search(SUPPLIES, plain(raw_name)))
         products.append({
-            "id": f"kv-{slugify(code)}",
+            # Mã hàng KiotViet phân biệt cả dấu chấm cuối ("6958828683858" khác "6958828683858.").
+            "id": "kv-" + re.sub(r"[^a-z0-9]", lambda m: f"_{ord(m.group()):x}", code.lower()),
             "slug": slug,
             "name": name,
             "categoryId": classify(raw_name, str(r.get("Nhóm hàng(3 Cấp)") or "")),
