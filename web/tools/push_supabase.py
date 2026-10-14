@@ -118,13 +118,18 @@ def main():
 
     updates = [p for p in imported if p["id"] in existing]
     print(f"Sản phẩm đã có, cập nhật giá / tồn kho / ẩn hiện: {len(updates)}")
-    for i, p in enumerate(updates):
+    def patch(p):
         if not DRY:
             call("PATCH", f"/rest/v1/products?id=eq.{urllib.parse.quote(p['id'])}",
                  {"price_min": p["price_min"], "price_label": p["price_label"], "stock": p["stock"], "visible": p["visible"], "code": p["code"]},
                  prefer="return=minimal")
-        if (i + 1) % 200 == 0 or i + 1 == len(updates):
-            print(f"  cập nhật: {i + 1}/{len(updates)}")
+
+    # Gửi 12 yêu cầu cùng lúc: mỗi món một yêu cầu nên chạy tuần tự sẽ mất cả nửa tiếng.
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        for i, _ in enumerate(pool.map(patch, updates)):
+            if (i + 1) % 500 == 0 or i + 1 == len(updates):
+                print(f"  cập nhật: {i + 1}/{len(updates)}", flush=True)
 
     has_content = call("GET", "/rest/v1/site_content?select=id&id=eq.1")
     if has_content:
