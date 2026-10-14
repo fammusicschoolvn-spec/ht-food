@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RefreshButton } from "@/components/admin/refresh-button";
 import { requireAdmin } from "@/lib/auth";
 import { readDb } from "@/lib/store";
 
@@ -41,6 +42,8 @@ export default async function AdminHome() {
           </div>
         ))}
       </dl>
+
+      <RefreshButton />
 
       {todo.length > 0 && (
         <section className="a-card">

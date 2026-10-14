@@ -264,3 +264,12 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
   updateTag(CATALOG_TAG);
   return { ok: "Đã lưu. Trang khách xem đã cập nhật." };
 }
+
+/* ---------- Làm mới ---------- */
+
+/** Dữ liệu sửa ngoài trang quản trị (nhập file Excel, tạo ảnh thu nhỏ) cần bấm làm mới để trang khách thấy ngay. */
+export async function refreshCatalog(_: FormState): Promise<FormState> {
+  await requireAdmin();
+  updateTag(CATALOG_TAG);
+  return { ok: "Đã làm mới. Trang khách đang hiện dữ liệu mới nhất." };
+}
