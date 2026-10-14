@@ -8,6 +8,8 @@ export const CATALOG_TAG = "catalog";
 
 // Trang khách chỉ hỏi đúng phần cần hiện (vài chục món), mỗi phần lưu đệm riêng.
 // Quản trị lưu thay đổi thì gọi updateTag(CATALOG_TAG) để làm mới tất cả.
+// Phần dùng ở mọi trang (menu, số đếm, mẫu nổi bật) lưu ở bộ nhớ đệm dùng chung của Vercel ("use cache: remote"),
+// để máy chủ nào nhận yêu cầu cũng có sẵn, không phải hỏi lại Supabase.
 
 export const PRICE_TIERS = [
   { id: "duoi-300", label: "Dưới 300.000đ", min: 0, max: 300_000 },
@@ -27,7 +29,7 @@ export function inTier(p: Product, tierId: string): boolean {
 
 /** Danh mục và nội dung trang (menu, chân trang, chữ trang chủ). */
 export async function getSite(): Promise<{ categories: Category[]; content: Content }> {
-  "use cache";
+  "use cache: remote";
   cacheTag(CATALOG_TAG);
   cacheLife("max");
   const [categories, content] = await Promise.all([readCategories(), readContent()]);
@@ -36,7 +38,7 @@ export async function getSite(): Promise<{ categories: Category[]; content: Cont
 
 /** Số món đang hiện: tổng, theo từng danh mục, theo từng mức giá. */
 export async function getCounts(): Promise<{ total: number; byCategory: Record<string, number>; byTier: Record<string, number> }> {
-  "use cache";
+  "use cache: remote";
   cacheTag(CATALOG_TAG);
   cacheLife("max");
   const rows = await visibleIndex();
@@ -51,7 +53,7 @@ export async function getCounts(): Promise<{ total: number; byCategory: Record<s
 
 /** Mẫu nổi bật cho trang chủ; chưa đủ 4 mẫu thì lấy các món mới nhất. */
 export async function getShowcase(): Promise<Product[]> {
-  "use cache";
+  "use cache: remote";
   cacheTag(CATALOG_TAG);
   cacheLife("max");
   const featured = await queryProducts({ visibleOnly: true, featuredOnly: true, page: 1, perPage: 8 });
