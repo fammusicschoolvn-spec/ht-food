@@ -78,7 +78,7 @@ export function ImagePicker({
           {images.map((src, i) => (
             <li key={src} className="w-32">
               <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-line bg-ivory">
-                <Image src={src} alt={`Ảnh ${i + 1}`} fill sizes="128px" className="object-cover" />
+                <Image src={src} alt={`Ảnh ${i + 1}`} fill sizes="128px" unoptimized={src.startsWith("http")} className="object-cover" />
                 {multiple && i === 0 && (
                   <span className="absolute left-1.5 top-1.5 rounded-md bg-forest-800 px-2 py-0.5 text-[0.7rem] font-semibold text-white">
                     Ảnh chính

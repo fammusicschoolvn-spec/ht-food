@@ -8,7 +8,7 @@ type Group = [name: string, children: string[], image?: string];
 
 // Nhóm lớn và danh mục con theo danh sách của cửa hàng.
 const groups: Group[] = [
-  ["Giỏ & hộp quà", ["Giỏ quà trái cây", "Hộp quà trái cây"], "/categories/gio-hop-qua.webp"],
+  ["Giỏ & hộp quà", ["Giỏ quà trái cây", "Hộp quà trái cây", "Hộp, giỏ & phụ kiện quà"], "/categories/gio-hop-qua.webp"],
   ["Đồ uống", ["Nước ngọt", "Nước tăng lực", "Nước ion kiềm", "Nước sâm", "Sữa trái cây", "Sữa hạt"], "/categories/do-uong.webp"],
   ["Bia & Rượu", ["Bia", "Rượu"], "/categories/bia-ruou.webp"],
   ["Sâm & Yến", ["Yến", "Cao sâm"], "/categories/sam-yen.webp"],
@@ -20,6 +20,7 @@ const groups: Group[] = [
   ["Ngũ cốc", ["Ngũ cốc ăn kiêng", "Ngũ cốc tăng cân"], "/categories/ngu-coc.webp"],
   ["Thực phẩm khô & Đồ hộp", ["Mì ăn liền", "Thịt hộp", "Gia vị", "Phô mai"], "/categories/thuc-pham-kho-do-hop.webp"],
   ["Hóa phẩm gia dụng", ["Viên giặt quần áo"], "/categories/hoa-pham-gia-dung.webp"],
+  ["Hàng khác", []],
 ];
 
 const descriptions: Record<string, string> = {
@@ -27,6 +28,8 @@ const descriptions: Record<string, string> = {
   "Hộp quà trái cây": "Hộp và khay trái cây sắp sẵn, gọn gàng, nhiều mức giá.",
   "Kẹo ngậm": "Gồm kẹo Ricola, kẹo sâm.",
   "Trái cây sấy": "Gồm nho khô.",
+  "Hộp, giỏ & phụ kiện quà": "Hộp, giỏ, vali, túi để tự gói quà.",
+  "Hàng khác": "Hàng đông lạnh, đồ chơi và các mặt hàng khác.",
 };
 
 // Giữ nguyên mã của hai danh mục cũ để sản phẩm đã đăng không bị lạc.
@@ -34,7 +37,7 @@ const fixedIds: Record<string, string> = { "Giỏ quà trái cây": "c-gio", "H�
 
 const categories: Category[] = groups.flatMap(([name, children, image]) => {
   const slug = slugify(name);
-  const parent: Category = { id: `c-${slug}`, slug, name, description: "", parentId: null, image: image ?? "" };
+  const parent: Category = { id: `c-${slug}`, slug, name, description: descriptions[name] ?? "", parentId: null, image: image ?? "" };
   return [
     parent,
     ...children.map((child) => {

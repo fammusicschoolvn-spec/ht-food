@@ -24,6 +24,10 @@ export type Product = {
   featured: boolean;
   visible: boolean;
   createdAt: string;
+  /** Mã hàng trên KiotViet (sản phẩm nhập từ file Excel). */
+  code?: string;
+  /** Tồn kho lúc nhập; chỉ dùng nội bộ, không hiện cho khách. */
+  stock?: number;
 };
 
 export type Step = { title: string; body: string };

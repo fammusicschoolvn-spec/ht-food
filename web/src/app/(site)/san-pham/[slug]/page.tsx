@@ -14,7 +14,8 @@ type Props = PageProps<"/san-pham/[slug]">;
 
 export async function generateStaticParams() {
   const { products } = await getCatalog();
-  return products.map((p) => ({ slug: p.slug }));
+  // Dựng sẵn các mẫu nổi bật; trang còn lại dựng khi có người mở lần đầu rồi lưu lại.
+  return products.filter((p) => p.featured).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: product.name,
     description: `${product.name} – ${product.priceLabel}. ${product.description}`.slice(0, 160),
-    openGraph: { images: [product.images[0]] },
+    openGraph: product.images[0] ? { images: [product.images[0]] } : undefined,
   };
 }
 
@@ -89,7 +90,7 @@ async function Detail({ params }: Pick<Props, "params">) {
             {product.description && (
               <p className="mt-8 max-w-xl whitespace-pre-line text-[1.06rem] leading-[1.8]">{product.description}</p>
             )}
-            {content.productNote && (
+            {content.productNote && group?.slug === "gio-hop-qua" && (
               <p className="mt-5 max-w-xl border-l-2 border-gold pl-4 text-[0.95rem] leading-relaxed text-muted">
                 {content.productNote}
               </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { ProductImage } from "./product-image";
 import { useState } from "react";
 
 export function Gallery({ images, name }: { images: string[]; name: string }) {
@@ -10,14 +10,7 @@ export function Gallery({ images, name }: { images: string[]; name: string }) {
   return (
     <div>
       <div className="relative aspect-[4/5] overflow-hidden rounded-[26px] bg-ivory">
-        <Image
-          src={current}
-          alt={name}
-          fill
-          priority
-          sizes="(min-width: 1024px) 560px, 100vw"
-          className="object-cover"
-        />
+        <ProductImage src={current} alt={name} priority sizes="(min-width: 1024px) 560px, 100vw" className="object-contain" />
       </div>
       {images.length > 1 && (
         <ul className="mt-4 flex flex-wrap gap-3">
@@ -32,7 +25,7 @@ export function Gallery({ images, name }: { images: string[]; name: string }) {
                   i === active ? "border-forest-700" : "border-transparent hover:border-line"
                 }`}
               >
-                <Image src={src} alt="" fill sizes="80px" className="object-cover" />
+                <ProductImage src={src} alt="" sizes="80px" className="object-contain" />
               </button>
             </li>
           ))}

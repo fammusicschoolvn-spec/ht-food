@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { ProductImage } from "./product-image";
 import type { Product } from "@/lib/types";
 
 export function ProductCard({
@@ -11,16 +11,16 @@ export function ProductCard({
   category?: string;
   priority?: boolean;
 }) {
+  const remote = Boolean(product.images[0]?.startsWith("http"));
   return (
     <Link href={`/san-pham/${product.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] bg-ivory">
-        <Image
+      <div className={`relative aspect-[4/5] overflow-hidden rounded-[22px] ${remote ? "bg-white" : "bg-ivory"}`}>
+        <ProductImage
           src={product.images[0]}
           alt={product.name}
-          fill
           priority={priority}
           sizes="(min-width: 1024px) 290px, (min-width: 640px) 33vw, 50vw"
-          className="object-cover transition-transform duration-700 ease-out-soft group-hover:scale-[1.04]"
+          className={`${remote ? "object-contain p-3" : "object-cover"} transition-transform duration-700 ease-out-soft group-hover:scale-[1.04]`}
         />
       </div>
       <div className="mt-4 px-1">

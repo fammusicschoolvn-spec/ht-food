@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ContactButtons } from "@/components/contact-buttons";
+import { Pager } from "@/components/pager";
 import { ProductGrid } from "@/components/product-card";
 import { childrenOf, familyIds, parentOf, topLevel } from "@/lib/categories";
 import { getCatalog, inTier, PRICE_TIERS } from "@/lib/data";
@@ -16,8 +17,11 @@ type Search = PageProps<"/san-pham">["searchParams"];
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
-function href(dm: string, gia: string, tim = "") {
+const PER_PAGE = 36;
+
+function href(dm: string, gia: string, tim = "", trang = 1) {
   const q = new URLSearchParams();
+  if (trang > 1) q.set("trang", String(trang));
   if (tim) q.set("q", tim);
   if (dm) q.set("dm", dm);
   if (gia) q.set("gia", gia);
@@ -48,6 +52,9 @@ async function Listing({ searchParams }: { searchParams: Search }) {
   );
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name;
   const emptyCategory = category && !products.some((p) => ids.includes(p.categoryId));
+  const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+  const page = Math.min(pages, Math.max(1, Math.floor(Number(one(sp.trang)) || 1)));
+  const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   return (
     <>
@@ -119,7 +126,7 @@ async function Listing({ searchParams }: { searchParams: Search }) {
         </div>
 
         <p className="mt-8 text-sm text-muted" role="status">
-          {list.length} sản phẩm
+          {list.length} sản phẩm{pages > 1 && ` · trang ${page}/${pages}`}
           {tim && (
             <>
               {" · "}
@@ -132,7 +139,8 @@ async function Listing({ searchParams }: { searchParams: Search }) {
 
         {list.length > 0 ? (
           <div className="mt-6">
-            <ProductGrid products={list} categoryName={categoryName} />
+            <ProductGrid products={shown} categoryName={categoryName} />
+            <Pager page={page} pages={pages} href={(n) => href(dm, gia, tim, n)} />
           </div>
         ) : (
           <div className="mt-6 rounded-[26px] border border-line bg-white/70 px-6 py-16 text-center">

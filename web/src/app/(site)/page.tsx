@@ -99,7 +99,8 @@ export default async function HomePage() {
       <section className="container-x py-20 lg:py-24">
         <SectionTitle eyebrow="Danh mục" title="Danh mục sản phẩm" />
         <ul className="mt-12 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-6">
-          {groups.map((g) => {
+          {/* "Hàng khác" chỉ để trong menu, không đưa ra trang chủ. */}
+          {groups.filter((g) => g.slug !== "hang-khac").map((g) => {
             const ids = familyIds(categories, g);
             const items = products.filter((p) => ids.includes(p.categoryId));
             const cover = g.image || items[0]?.images[0];
@@ -152,7 +153,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-12 flex justify-center">
             <Link href="/san-pham" className="btn btn-line">
-              Xem tất cả {products.length} mẫu
+              Xem tất cả {products.length.toLocaleString("vi-VN")} sản phẩm
               <ArrowIcon width={18} height={18} />
             </Link>
           </div>
