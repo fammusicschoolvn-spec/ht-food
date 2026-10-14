@@ -5,6 +5,8 @@ Website bán giỏ quà, hộp quà trái cây nhập khẩu và bánh kẹo ngo
 - Mã nguồn: `web/` (Next.js 16, Tailwind 4, TypeScript).
 - Ảnh gốc cửa hàng gửi: `hình ảnh sản phẩm.zip`.
 
+Web thật: https://www.htfoodxuanloc.com (tên miền mua trong Vercel; bản không www tự chuyển sang www; vẫn còn https://ht-food.vercel.app).
+
 ## Chạy thử
 
 Launch config `ht-food` (cổng 5550), hoặc:

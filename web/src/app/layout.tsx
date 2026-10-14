@@ -14,6 +14,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.htfoodxuanloc.com"),
   title: {
     default: "HT Food – Trái cây, bánh kẹo nhập khẩu Xuân Lộc",
     template: "%s | HT Food",
