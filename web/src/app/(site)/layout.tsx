@@ -97,8 +97,22 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
 
       {zaloGroup && <DealCard href={zaloGroup} />}
 
-      {/* Hai nút liên hệ tròn, neo ở mép phải và đi theo khi cuộn trang */}
+      {/* Các nút liên hệ tròn (Facebook, Zalo, gọi), neo ở mép phải và đi theo khi cuộn trang */}
       <div className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-4 z-30 flex flex-col gap-3 sm:right-6">
+        {facebook && (
+          <a
+            href={facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Trang Facebook của HT Food"
+            title="Facebook"
+            className="flex size-12 items-center justify-center rounded-full bg-[#1877f2] text-white shadow-[0_10px_24px_-8px_rgb(24_80_200/0.65)] ring-2 ring-white transition-transform duration-200 hover:scale-110"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M13.5 21v-7.5h2.5l.4-3h-2.9V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.5V21h3Z" />
+            </svg>
+          </a>
+        )}
         {zalo && (
           <a
             href={zalo}
